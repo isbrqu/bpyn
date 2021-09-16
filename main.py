@@ -15,14 +15,14 @@ params = {
     'username': config.username,
     'pin': '',
 }
-response = requests.get(url, params=params, headers=header.login)
-soup = Soup(response.text, 'html5lib')
+with requests.Session() as session:
+    response = session.get(url, params=params, headers=header.login)
+    soup = Soup(response.text, 'html5lib')
+    # termina el login y adquiere la cookie LINKS
+    state = soup.select_one('#LoginForm input[name="_STATE_"]')['value']
+    print(state)
 
-# termina el login y adquiere la cookie LINKS
-state = soup.select_one('#LoginForm input[name="_STATE_"]')['value']
-print(state)
-
-# adquiere los state del home
-state = soup.select_one('#RedirectHomeForm input[name="_STATE_"]')['value']
-print(state)
+    # adquiere los state del home
+    state = soup.select_one('#RedirectHomeForm input[name="_STATE_"]')['value']
+    print(state)
 
