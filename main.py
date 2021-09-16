@@ -37,6 +37,11 @@ with requests.Session() as session:
     print(response.text)
 
     # adquiere los state del home
+    url = f'{base_url}/home.htm'
     state = soup.select_one('#RedirectHomeForm input[name="_STATE_"]')['value']
-    print(state)
+    params = {
+        '_STATE_': state,
+    }
+    response = session.post(url, params=params, headers=header.home)
+    print(response.text)
 
