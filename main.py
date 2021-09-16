@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup as Soup
 import header
 import config
+import re
 
 scheme = 'https'
 domain = 'hb.redlink.com.ar'
@@ -43,5 +44,11 @@ with requests.Session() as session:
         '_STATE_': state,
     }
     response = session.post(url, params=params, headers=header.home)
+    soup = Soup(response.text, 'html5lib')
+    # obtiene el state de posicion consolidada
+    regex = r'posicionConsolidada.htm\?_STATE_=(.+)"'
+    pattern = re.compile(regex)
+    state = pattern.search(soup.text).group(1)
+    print(state)
     print(response.text)
 
