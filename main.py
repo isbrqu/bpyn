@@ -50,5 +50,8 @@ with requests.Session() as session:
     pattern = re.compile(regex)
     state = pattern.search(soup.text).group(1)
     print(state)
+    # cierra sesion
+    url = f'{base_url}/logout.htm'
+    response = session.get(url, headers=header.logout)
     print(response.text)
 
