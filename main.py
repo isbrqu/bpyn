@@ -21,8 +21,20 @@ with requests.Session() as session:
     soup = Soup(response.text, 'html5lib')
 
     # termina el login y adquiere la cookie LINKS
+    url = f'{base_url}/doLogin.htm'
     state = soup.select_one('#LoginForm input[name="_STATE_"]')['value']
-    print(state)
+    params = {
+        'username': config.username,
+        'password': config.password,
+        'jsonRequest': True,
+        'sfaInfo': '',
+        'pcCompartida': True,
+        'inclu': False,
+        'recordarUsuario': False,
+        '_STATE_': state,
+    }
+    response = session.post(url, params=params, headers=header.dologin)
+    print(response.text)
 
     # adquiere los state del home
     state = soup.select_one('#RedirectHomeForm input[name="_STATE_"]')['value']
