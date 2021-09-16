@@ -9,15 +9,17 @@ directory = 'bpn'
 base_url = f'{scheme}://{domain}/{directory}'
 
 # login
-url = f'{base_url}/doLoginFirstStep.htm'
-params = {
-    'isInclu': False,
-    'username': config.username,
-    'pin': '',
-}
 with requests.Session() as session:
+    # realiza la primera instancia de login
+    url = f'{base_url}/doLoginFirstStep.htm'
+    params = {
+        'isInclu': False,
+        'username': config.username,
+        'pin': '',
+    }
     response = session.get(url, params=params, headers=header.login)
     soup = Soup(response.text, 'html5lib')
+
     # termina el login y adquiere la cookie LINKS
     state = soup.select_one('#LoginForm input[name="_STATE_"]')['value']
     print(state)
