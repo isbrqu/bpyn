@@ -67,8 +67,21 @@ with requests.Session() as session:
         params = {
             '_STATE_': state,
         }
-        response = session.get(url, params=params, headers=header.accounts)
-        accounts = response.json()['response']['data']
+        json = session.get(url, params=params, headers=header.accounts).json()
+        accounts = json['response']['data']
+        # obtengo el state de de posicionConsolidada para getSaldoPosCons
+        url = f'{base_url}/getSaldoPosCons.htm'
+        regex = r"getSaldoPosCons.htm\?_STATE_=(.+)'"
+        pattern = re.compile(regex)
+        state = pattern.search(soup.text).group(1)
+        for account in accounts:
+            params = {
+                '_STATE_': state,
+                'numero': account['numero'],
+                'tipoTandem': account['tipoTandem'],
+            }
+            json = session.get(url, params=params, headers=header.balance).json()
+            print(json)
     except Exception as exception:
         print(exception)
     finally:
