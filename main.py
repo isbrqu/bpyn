@@ -61,8 +61,19 @@ with requests.Session() as session:
     pattern = re.compile(regex)
     state = pattern.search(soup.text).group(1)
     print(state)
-    # cierra sesion
-    url = f'{base_url}/logout.htm'
-    response = session.get(url, headers=header.logout)
-    print(response.text)
+    # obtiene las cuentas en un json
+    try:
+        url = f'{base_url}/getCuentasForPC.htm'
+        params = {
+            '_STATE_': state,
+        }
+        response = session.get(url, params=params, headers=header.accounts)
+        accounts = response.json()['response']['data']
+    except Exception as exception:
+        print(exception)
+    finally:
+        # cierra sesion
+        url = f'{base_url}/logout.htm'
+        response = session.get(url, headers=header.logout)
+        print(response.text)
 
