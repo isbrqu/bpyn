@@ -50,6 +50,14 @@ with requests.Session() as session:
     pattern = re.compile(regex)
     state = pattern.search(soup.text).group(1)
     print(state)
+    # accede a posición consolidada y toma el state de getCuentasForPc
+    url = f'{base_url}/posicionConsolidada.htm'
+    params = {
+        '_STATE_': state,
+    }
+    response = session.post(url, params=params, headers=header.position)
+    soup = Soup(response.text, 'html5lib')
+    print(soup.prettify())
     # cierra sesion
     url = f'{base_url}/logout.htm'
     response = session.get(url, headers=header.logout)
