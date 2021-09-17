@@ -57,7 +57,10 @@ with requests.Session() as session:
     }
     response = session.post(url, params=params, headers=header.position)
     soup = Soup(response.text, 'html5lib')
-    print(soup.prettify())
+    regex = r"getCuentasForPC.htm\?_STATE_=(.+)'"
+    pattern = re.compile(regex)
+    state = pattern.search(soup.text).group(1)
+    print(state)
     # cierra sesion
     url = f'{base_url}/logout.htm'
     response = session.get(url, headers=header.logout)
