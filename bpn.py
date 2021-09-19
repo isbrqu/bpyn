@@ -73,6 +73,11 @@ class Bpn(object):
         regex = r'(\w+).htm\?_STATE_=(.+)(?:"|\')'
         pattern = re.compile(regex)
         self.states = dict(pattern.findall(self.soup_home.text))
+    
+    def movements(self):
+        tag = self.soup_home.select_one('#_menu_movimientosHistoricos')
+        state = tag['realhref'].split('=')[1]
+        print(state)
 
     def positions(self):
         params = {
