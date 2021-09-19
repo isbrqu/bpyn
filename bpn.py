@@ -96,6 +96,11 @@ class Bpn(object):
         state = tag['realhref'].split('=')[1]
         print(state)
 
+    def tendences(self):
+        selector = '#_menu_posicion31DicWS'
+        tag = self.soup_home.select_one(selector)
+        state = tag['realhref'].split('=')[1]
+        print(state)
 
     def cbu(self):
         tag = self.soup_home.select_one('#_menu_consultaCbu')
