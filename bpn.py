@@ -102,6 +102,12 @@ class Bpn(object):
         state = tag['realhref'].split('=')[1]
         print(state)
 
+    def debin(self):
+        selector = '#_menu_consultaCredin'
+        tag = self.soup_home.select_one(selector)
+        state = tag['realhref'].split('=')[1]
+        print(state)
+
     def cbu(self):
         tag = self.soup_home.select_one('#_menu_consultaCbu')
         state = tag['realhref'].split('=')[1]
