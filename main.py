@@ -8,4 +8,4 @@ bpn = Bpn(username, password)
 with open('home.html', 'w', encoding='utf-8') as html:
     text = bpn.soup.prettify()
     html.write(text)
-
+print(bpn.logout())

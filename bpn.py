@@ -62,5 +62,11 @@ class Bpn(object):
         response = self.session.post(url, params=params, headers=header)
         soup = Soup(response.text, PARSER)
         self.soup = soup
-
+    
+    def logout(self):
+        url = bpn_url.logout
+        header = bpn_header.logout
+        response = self.session.get(url, headers=header)
+        json = response.json()
+        return json
 
