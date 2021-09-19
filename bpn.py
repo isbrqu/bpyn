@@ -85,6 +85,12 @@ class Bpn(object):
         state = tag['realhref'].split('=')[1]
         print(state)
 
+    def movements_of_the_day(self):
+        selector = '#_menu_movimientosDia'
+        tag = self.soup_home.select_one(selector)
+        state = tag['realhref'].split('=')[1]
+        print(state)
+
     def position(self):
         tag = self.soup_home.select_one('#_menu_posicionConsolidada')
         state = tag['realhref'].split('=')[1]
