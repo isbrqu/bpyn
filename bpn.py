@@ -61,7 +61,47 @@ class Bpn(object):
         header = bpn_header.home
         response = self.session.post(url, params=params, headers=header)
         soup = Soup(response.text, PARSER)
-        self.soup = soup
+        self.soup_home = soup
+
+    def positions(self):
+        # ---
+        regex = r'posicionConsolidada.htm\?_STATE_=(.+)"'
+        pattern = re.compile(regex)
+        state = pattern.search(self.soup_home.text).group(1)
+        # ---
+        params = {
+            '_STATE_': state,
+        }
+        url = bpn_url.position
+        header = bpn_header.position
+        response = self.session.post(url, params=params, headers=header)
+        soup = Soup(response.text, PARSER)
+        regex = r"getCuentasForPC.htm\?_STATE_=(.+)'"
+        pattern = re.compile(regex)
+        state = pattern.search(soup.text).group(1)
+        params = {
+            '_STATE_': state,
+        }
+        url = bpn_url.accounts
+        header = bpn_header.accounts
+        response = self.session.get(url, params=params, headers=header)
+        json = response.json()
+        accounts = json['response']['data']
+        # obtengo el state de de posicionConsolidada para getSaldoPosCons
+        url = bpn_url.balance
+        header = bpn_header.balance
+        regex = r"getSaldoPosCons.htm\?_STATE_=(.+)'"
+        pattern = re.compile(regex)
+        state = pattern.search(soup.text).group(1)
+        for account in accounts:
+            params = {
+                '_STATE_': state,
+                'numero': account['numero'],
+                'tipoTandem': account['tipoTandem'],
+            }
+            response = self.session.get(url, params=params, headers=header)
+            json = response.json()
+            yield json
     
     def logout(self):
         url = bpn_url.logout
