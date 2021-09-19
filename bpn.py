@@ -120,6 +120,12 @@ class Bpn(object):
         state = tag['realhref'].split('=')[1]
         print(state)
 
+    def transferences(self):
+        selector = '#_menu_resumenTransferencias'
+        tag = self.soup_home.select_one(selector)
+        state = tag['realhref'].split('=')[1]
+        print(state)
+
     def balance(self):
         params = {
             '_STATE_': self.states['posicionConsolidada'],
