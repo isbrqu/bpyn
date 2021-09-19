@@ -66,7 +66,8 @@ class Bpn(object):
         except Exception as exception:
             print(exception)
         finally:
-            self.logout()
+            # self.logout()
+            pass
 
     def __states(self):
         regex = r'(\w+).htm\?_STATE_=(.+)(?:"|\')'
@@ -74,13 +75,8 @@ class Bpn(object):
         self.states = dict(pattern.findall(self.soup_home.text))
 
     def positions(self):
-        # ---
-        regex = r'posicionConsolidada.htm\?_STATE_=(.+)"'
-        pattern = re.compile(regex)
-        state = pattern.search(self.soup_home.text).group(1)
-        # ---
         params = {
-            '_STATE_': state,
+            '_STATE_': self.states['posicionConsolidada'],
         }
         url = bpn_url.position
         header = bpn_header.position
