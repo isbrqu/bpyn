@@ -84,6 +84,12 @@ class Bpn(object):
         state = tag['realhref'].split('=')[1]
         print(state)
 
+
+    def cbu(self):
+        tag = self.soup_home.select_one('#_menu_consultaCbu')
+        state = tag['realhref'].split('=')[1]
+        print(state)
+
     def balance(self):
         params = {
             '_STATE_': self.states['posicionConsolidada'],
