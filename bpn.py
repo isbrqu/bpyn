@@ -11,7 +11,7 @@ class Bpn(object):
     def __init__(self, username, password, is_inclu=False, pin=''):
         self.username = username
         self.session = requests.Session()
-        self.states = {}
+        self.state = {}
         self.soup = None
         self.__login(username, password, is_inclu, pin)
 
@@ -54,14 +54,24 @@ class Bpn(object):
         return json
     
     def __home(self, state):
-        params = {
-            '_STATE_': state,
-        }
-        url = bpn_url.home
-        header = bpn_header.home
-        response = self.session.post(url, params=params, headers=header)
-        soup = Soup(response.text, PARSER)
-        self.soup_home = soup
+        try:
+            params = {
+                '_STATE_': state,
+            }
+            url = bpn_url.home
+            header = bpn_header.home
+            response = self.session.post(url, params=params, headers=header)
+            self.soup_home = Soup(response.text, PARSER)
+            self.__states()
+        except Exception as exception:
+            print(exception)
+        finally:
+            self.logout()
+
+    def __states(self):
+        regex = r'(\w+).htm\?_STATE_=(.+)(?:"|\')'
+        pattern = re.compile(regex)
+        self.states = dict(pattern.findall(self.soup_home.text))
 
     def positions(self):
         # ---
