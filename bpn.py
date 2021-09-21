@@ -6,6 +6,11 @@ import bpn_url
 
 PARSER = 'html5lib'
 
+def realhref_state(soup, selector):
+    tag = soup.select_one(selector)
+    state = tag['realhref'].split('=')[1]
+    return state
+
 class Bpn(object):
 
     def __init__(self, username, password, is_inclu=False, pin=''):
@@ -75,84 +80,73 @@ class Bpn(object):
         self.states = dict(pattern.findall(self.soup_home.text))
     
     def movements(self):
-        tag = self.soup_home.select_one('#_menu_movimientosHistoricos')
-        state = tag['realhref'].split('=')[1]
+        selector = '#_menu_movimientosHistoricos'
+        state = realhref_state(self.soup_home, selector)
         print(state)
 
     def last_movements(self):
         selector = '#_menu_ultimosMovimientos'
-        tag = self.soup_home.select_one(selector)
-        state = tag['realhref'].split('=')[1]
+        state = realhref_state(self.soup_home, selector)
         print(state)
 
     def movements_of_the_day(self):
         selector = '#_menu_movimientosDia'
-        tag = self.soup_home.select_one(selector)
-        state = tag['realhref'].split('=')[1]
+        state = realhref_state(self.soup_home, selector)
         print(state)
 
     def position(self):
-        tag = self.soup_home.select_one('#_menu_posicionConsolidada')
-        state = tag['realhref'].split('=')[1]
+        selector = '#_menu_posicionConsolidada'
+        state = realhref_state(self.soup_home, selector)
         print(state)
 
     def tendences(self):
         selector = '#_menu_posicion31DicWS'
-        tag = self.soup_home.select_one(selector)
-        state = tag['realhref'].split('=')[1]
+        state = realhref_state(self.soup_home, selector)
         print(state)
 
     def debin(self):
         selector = '#_menu_consultaCredin'
-        tag = self.soup_home.select_one(selector)
-        state = tag['realhref'].split('=')[1]
+        state = realhref_state(self.soup_home, selector)
         print(state)
 
     def cbu(self):
-        tag = self.soup_home.select_one('#_menu_consultaCbu')
-        state = tag['realhref'].split('=')[1]
+        selector = '#_menu_consultaCbu'
+        state = realhref_state(self.soup_home, selector)
         print(state)
 
     def buys(self):
         selector = '#_menu_consultasComprasComercios'
-        tag = self.soup_home.select_one(selector)
-        state = tag['realhref'].split('=')[1]
+        state = realhref_state(self.soup_home, selector)
         print(state)
 
     def creditcards(self):
         selector = '#_menu_consultaTarjetasCredito'
-        tag = self.soup_home.select_one(selector)
-        state = tag['realhref'].split('=')[1]
+        state = realhref_state(self.soup_home, selector)
         print(state)
 
     def documents(self):
         selector = '#_menu_gestionDocumentosElectronicosConsulta'
-        tag = self.soup_home.select_one(selector)
-        state = tag['realhref'].split('=')[1]
+        state = realhref_state(self.soup_home, selector)
         print(state)
 
     def balances(self):
         selector = '#_menu_saldos'
-        tag = self.soup_home.select_one(selector)
-        state = tag['realhref'].split('=')[1]
+        state = realhref_state(self.soup_home, selector)
         print(state)
 
     def phone_recharge(self):
         selector = '#_menu_consultaCargaValorTP'
-        tag = self.soup_home.select_one(selector)
-        state = tag['realhref'].split('=')[1]
+        state = realhref_state(self.soup_home, selector)
         print(state)
 
     def transferences(self):
         selector = '#_menu_resumenTransferencias'
-        tag = self.soup_home.select_one(selector)
-        state = tag['realhref'].split('=')[1]
+        state = realhref_state(self.soup_home, selector)
         print(state)
 
     def payments_made(self):
         selector = '#_menu_pagosRealizados'
-        tag = self.soup_home.select_one(selector)
-        state = tag['realhref'].split('=')[1]
+        state = realhref_state(self.soup_home, selector)
         print(state)
 
     def balance(self):
