@@ -6,11 +6,6 @@ import bpn_url
 
 PARSER = 'html5lib'
 
-def realhref_state(soup, selector):
-    tag = soup.select_one(selector)
-    state = tag['realhref'].split('=')[1]
-    return state
-
 def make_regex_state(string):
     return f'(?:"|\'){string}\.htm\?_STATE_=(.+)(?:"|\')'
 
@@ -25,12 +20,6 @@ def extract_state(obj, selector=None, attr=None, regex=None):
         state = pattern.search(obj).group(1)
     else:
         raise Exception("selector, attr or regex isn't define")
-    return state
-
-def string_js_state(response, string):
-    regex = make_regex_state(string)
-    pattern = re.compile(regex)
-    state = pattern.search(response.text).group(1)
     return state
 
 def write_html(name, response):
