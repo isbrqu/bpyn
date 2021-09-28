@@ -14,6 +14,19 @@ def realhref_state(soup, selector):
 def make_regex_state(string):
     return f'(?:"|\'){string}\.htm\?_STATE_=(.+)(?:"|\')'
 
+def extract_state(obj, selector=None, attr=None, regex=None):
+    if selector and attr:
+        soup = Soup(obj, PARSER) if isinstance(obj, str) else obj
+        tag = soup.select_one(selector)
+        state = tag[attr]
+        state = state.split('=')[1] if '=' in state else state
+    elif regex:
+        pattern = re.compile(regex)
+        state = pattern.search(obj).group(1)
+    else:
+        raise Exception("selector, attr or regex isn't define")
+    return state
+
 def string_js_state(response, string):
     regex = make_regex_state(string)
     pattern = re.compile(regex)
@@ -243,13 +256,14 @@ class Bpn(object):
         return json
 
     def payments_made(self):
-        selector = '#_menu_pagosRealizados'
-        state = realhref_state(self.soup_home, selector)
-        # next
+        section = 'pagosRealizados'
+        selector = f'#_menu_{section}'
+        attr = 'realhref'
+        state = extract_state(self.soup_home, selector=selector, attr=attr)
         params = {
             '_STATE_': state,
         }
-        url = bpn_url.make('pagosRealizados')
+        url = bpn_url.make(section)
         header = bpn_header.transferences
         response = self.session.post(url, params=params, headers=header)
         # json
@@ -266,7 +280,8 @@ class Bpn(object):
 
     def __entity(self, response):
         section =  'obtenerLinkPagosEnte'
-        state = string_js_state(response, section)
+        regex = make_regex_state(section)
+        state = extract_state(response.text, regex=regex)
         params = {
             '_STATE_': state,
         }
@@ -278,10 +293,9 @@ class Bpn(object):
 
     def __payments_made(self, response, params_extra={}):
         section = 'getPagosRealizados'
-        soup = Soup(response.text, PARSER)
         selector = '#consultaPagosRealizadosForm input[name="_STATE_"]'
-        state = soup.select_one(selector)['value']
-        print(state)
+        attr = 'value'
+        state = extract_state(response.text, selector=selector, attr=attr)
         params = {
             '_STATE_': state,
             'linkPagosEnte': '',
