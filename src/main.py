@@ -8,7 +8,7 @@ password = config.password
 bpn = Bpn(username, password)
 
 try:
-    result = bpn.phone_recharge()
+    result = bpn.payments_made()
     print(result)
 finally:
     print(bpn.logout())

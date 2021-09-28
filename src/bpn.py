@@ -245,7 +245,25 @@ class Bpn(object):
     def payments_made(self):
         selector = '#_menu_pagosRealizados'
         state = realhref_state(self.soup_home, selector)
-        print(state)
+        # next
+        params = {
+            '_STATE_': state,
+        }
+        url = bpn_url.make('pagosRealizados')
+        header = bpn_header.transferences
+        response = self.session.post(url, params=params, headers=header)
+        # json
+        section =  'obtenerLinkPagosEnte'
+        state = string_js_state(response, section)
+        params = {
+            '_STATE_': state,
+        }
+        url = bpn_url.make(section)
+        header = bpn_header.balance
+        response = self.session.post(url, params=params, headers=header)
+        json = response.json()
+        # json = json['response']['data']
+        return json
 
     def accounts_transferences(self):
         pass
