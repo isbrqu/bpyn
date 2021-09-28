@@ -126,10 +126,33 @@ class Bpn(object):
         state = realhref_state(self.soup_home, selector)
         print(state)
 
-    def debin(self):
+    def credin(self):
         selector = '#_menu_consultaCredin'
         state = realhref_state(self.soup_home, selector)
-        print(state)
+        # next
+        params = {
+            '_STATE_': state,
+        }
+        url = bpn_url.make('consultaCredin')
+        header = bpn_header.transferences
+        response = self.session.post(url, params=params, headers=header)
+        section = 'showConsultaCredin'
+        soup = Soup(response.text, PARSER)
+        state = soup.select_one('#grilla')['source'].split('=')[1]
+        params = {
+            '_STATE_': state,
+            'fechaDesde': '01/01/1999',
+            'fechaHasta': '30/09/2021',
+            'sentidoCredin': 'Enviados',
+            'maxRows': 11,
+            'page': 2,
+        }
+        url = bpn_url.make(section)
+        header = bpn_header.balance
+        response = self.session.post(url, params=params, headers=header)
+        json = response.json()
+        # json = json['response']['data']
+        return json
 
     def cbu(self):
         selector = '#_menu_consultaCbu'
