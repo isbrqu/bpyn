@@ -227,9 +227,10 @@ class Bpn(object):
         return json
 
     def transferences(self):
-        selector = '#_menu_resumenTransferencias'
-        state = realhref_state(self.soup_home, selector)
-        # next
+        section = 'resumenTransferencias'
+        selector = f'#_menu_{section}'
+        attr = 'realhref'
+        state = extract_state(self.soup_home, selector=selector, attr=attr)
         params = {
             '_STATE_': state,
         }
@@ -238,7 +239,8 @@ class Bpn(object):
         response = self.session.post(url, params=params, headers=header)
         # json
         section =  'transferenciasByFilter'
-        state = string_js_state(response, section)
+        regex = make_regex_state(section)
+        state = extract_state(response.text, regex=regex)
         params = {
             '_STATE_': state,
             'fechaDesde': '01/01/1999',
