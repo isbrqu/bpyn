@@ -11,6 +11,19 @@ def realhref_state(soup, selector):
     state = tag['realhref'].split('=')[1]
     return state
 
+def make_regex_state(string):
+    return f'(?:"|\'){string}\.htm\?_STATE_=(.+)(?:"|\')'
+
+def string_js_state(response, string):
+    regex = make_regex_state(string)
+    pattern = re.compile(regex)
+    state = pattern.search(response.text).group(1)
+    return state
+
+def write_html(name, response):
+    with open(f'{name}.html', 'w', encoding='utf-8') as html:
+        html.write(response.text)
+
 class Bpn(object):
 
     def __init__(self, username, password, is_inclu=False, pin=''):
@@ -83,6 +96,15 @@ class Bpn(object):
         selector = '#_menu_movimientosHistoricos'
         state = realhref_state(self.soup_home, selector)
         print(state)
+        url = bpn_url.movements
+        params = {'_STATE_': state}
+        header = bpn_header.movements
+        response = self.session.post(url, params=params, headers=header)
+        regex = r'/bpn/getCuentas\.htm\?_STATE_=(.+)(?:"|\')'
+        pattern = re.compile(regex)
+        state = pattern.search(response.text).group(1)
+        print('state:', state)
+        # write_html('foo', response)
 
     def last_movements(self):
         selector = '#_menu_ultimosMovimientos'
@@ -142,48 +164,40 @@ class Bpn(object):
     def transferences(self):
         selector = '#_menu_resumenTransferencias'
         state = realhref_state(self.soup_home, selector)
-        print(state)
+        # next
+        params = {
+            '_STATE_': state,
+        }
+        url = bpn_url.make('resumenTransferencias')
+        header = bpn_header.transferences
+        response = self.session.post(url, params=params, headers=header)
+        # json
+        section =  'transferenciasByFilter'
+        state = string_js_state(response, section)
+        params = {
+            '_STATE_': state,
+            'fechaDesde': '01/01/1999',
+            'fechaHasta': '30/12/2021',
+            'linesPerPage': 100,
+            'pageNumber': 1,
+            'orderingField': 'fechaMovimiento',
+            'sortOrder': 'desc',
+        }
+        url = bpn_url.make(section)
+        header = bpn_header.balance
+        response = self.session.post(url, params=params, headers=header)
+        json = response.json()
+        # json = json['response']['data']
+        return json
 
     def payments_made(self):
         selector = '#_menu_pagosRealizados'
         state = realhref_state(self.soup_home, selector)
         print(state)
 
-    def balance(self):
-        params = {
-            '_STATE_': self.states['posicionConsolidada'],
-        }
-        url = bpn_url.position
-        header = bpn_header.position
-        response = self.session.post(url, params=params, headers=header)
-        soup = Soup(response.text, PARSER)
-        regex = r"getCuentasForPC.htm\?_STATE_=(.+)'"
-        pattern = re.compile(regex)
-        state = pattern.search(soup.text).group(1)
-        params = {
-            '_STATE_': state,
-        }
-        url = bpn_url.accounts
-        header = bpn_header.accounts
-        response = self.session.get(url, params=params, headers=header)
-        json = response.json()
-        accounts = json['response']['data']
-        # obtengo el state de de posicionConsolidada para getSaldoPosCons
-        url = bpn_url.balance
-        header = bpn_header.balance
-        regex = r"getSaldoPosCons.htm\?_STATE_=(.+)'"
-        pattern = re.compile(regex)
-        state = pattern.search(soup.text).group(1)
-        for account in accounts:
-            params = {
-                '_STATE_': state,
-                'numero': account['numero'],
-                'tipoTandem': account['tipoTandem'],
-            }
-            response = self.session.get(url, params=params, headers=header)
-            json = response.json()
-            yield json
-    
+    def accounts_transferences(self):
+        pass
+
     def logout(self):
         url = bpn_url.logout
         header = bpn_header.logout
