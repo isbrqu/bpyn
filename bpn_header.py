@@ -168,3 +168,4 @@ transferences = {
     'Referer': 'https://hb.redlink.com.ar/bpn/home.htm',
     'Accept-Language': 'en-US,en;q=0.9,es-AR;q=0.8,es;q=0.7',
 }
+

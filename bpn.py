@@ -182,7 +182,36 @@ class Bpn(object):
     def phone_recharge(self):
         selector = '#_menu_consultaCargaValorTP'
         state = realhref_state(self.soup_home, selector)
-        print(state)
+        # next
+        params = {
+            '_STATE_': state,
+        }
+        url = bpn_url.make('consultaCargaValorTP')
+        header = bpn_header.transferences
+        response = self.session.post(url, params=params, headers=header)
+        section = 'getRecargasConsultaCargaValor'
+        soup = Soup(response.text, PARSER)
+        selector = '#consultacargavalorForm input[name="_STATE_"]'
+        state = soup.select_one(selector)['value']
+        data = {
+            '_STATE_': state,
+            'codigoEmpresa': '',
+            'usuario': '',
+            'canal': '',
+            'importe': '',
+            'perteneceA': '',
+            'fechaDesde': '01/01/1999',
+            'fechaHasta': '27/09/2021',
+            'pageNumber': 1,
+            'linesPerPage': 5,
+            'codigoRubro': 'TP',
+        }
+        url = bpn_url.make(section)
+        header = bpn_header.balance
+        response = self.session.post(url, data=data, headers=header)
+        json = response.json()
+        # json = json['response']['data']
+        return json
 
     def transferences(self):
         selector = '#_menu_resumenTransferencias'
