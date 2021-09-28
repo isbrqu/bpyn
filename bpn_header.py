@@ -149,3 +149,21 @@ movements = {
     'Referer': 'https://hb.redlink.com.ar/bpn/home.htm',
     'Accept-Language': 'en-US,en;q=0.9,es-AR;q=0.8,es;q=0.7',
 }
+transferences = {
+    'Connection': 'keep-alive',
+    'Content-Length': '0',
+    'Pragma': 'no-cache',
+    'Cache-Control': 'no-cache',
+    'sec-ch-ua': '"Chromium";v="94", "Google Chrome";v="94", ";Not A Brand";v="99"',
+    'Accept': 'text/html, */*',
+    'X-Requested-With': 'XMLHttpRequest',
+    'sec-ch-ua-mobile': '?0',
+    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36',
+    'sec-ch-ua-platform': '"Linux"',
+    'Origin': 'https://hb.redlink.com.ar',
+    'Sec-Fetch-Site': 'same-origin',
+    'Sec-Fetch-Mode': 'cors',
+    'Sec-Fetch-Dest': 'empty',
+    'Referer': 'https://hb.redlink.com.ar/bpn/home.htm',
+    'Accept-Language': 'en-US,en;q=0.9,es-AR;q=0.8,es;q=0.7',
+}
