@@ -253,6 +253,18 @@ class Bpn(object):
         header = bpn_header.transferences
         response = self.session.post(url, params=params, headers=header)
         # json
+        json = self.__entity(response)
+        item = json['response']['data'][0]['adheridos'][0]
+        print(item)
+        json = self.__payments_made(response, params_extra={
+            'codAbre': item['codigoAbre'],
+            'ente': item['codigoEnte'],
+        })
+        # json
+        # json = json['response']['data']
+        return json
+
+    def __entity(self, response):
         section =  'obtenerLinkPagosEnte'
         state = string_js_state(response, section)
         params = {
@@ -262,7 +274,32 @@ class Bpn(object):
         header = bpn_header.balance
         response = self.session.post(url, params=params, headers=header)
         json = response.json()
-        # json = json['response']['data']
+        return json
+
+    def __payments_made(self, response, params_extra={}):
+        section = 'getPagosRealizados'
+        soup = Soup(response.text, PARSER)
+        selector = '#consultaPagosRealizadosForm input[name="_STATE_"]'
+        state = soup.select_one(selector)['value']
+        print(state)
+        params = {
+            '_STATE_': state,
+            'linkPagosEnte': '',
+            'pagSgte': '',
+            'pagAnt': '',
+            'pagAct': 0,
+            'fechaDesde': '28/09/1991',
+            'fechaHasta': '28/09/2021',
+            'importeDesde': '',
+            'importeHasta': '',
+            'vencDesde': '28/09/2021',
+            'vencHasta': '',
+        }
+        params.update(params_extra)
+        url = bpn_url.make(section)
+        header = bpn_header.balance
+        response = self.session.post(url, params=params, headers=header)
+        json = response.json()
         return json
 
     def accounts_transferences(self):
