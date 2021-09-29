@@ -61,6 +61,9 @@ class Bpn(object):
         return soup
 
     def __second_login(self, username, password, state):
+        section = 'doLogin'
+        url = bpn_url.make(section)
+        header = bpn_header.login
         params = {
             'username': username,
             'password': password,
@@ -71,8 +74,6 @@ class Bpn(object):
             'recordarUsuario': False,
             '_STATE_': state,
         }
-        url = bpn_url.second_login
-        header = bpn_header.login
         response = self.session.post(url, params=params, headers=header)
         json = response.json()
         return json
