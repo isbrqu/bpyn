@@ -3,6 +3,8 @@ import bpn_header
 import re
 import requests
 import bpn_url
+from scrapy.selector import Selector
+from scrapy.http import HtmlResponse
 
 PARSER = 'html5lib'
 
@@ -82,6 +84,7 @@ class Bpn(object):
             header = bpn_header.home
             response = self.session.post(url, params=params, headers=header)
             self.soup_home = Soup(response.text, PARSER)
+            self.response_home = response
             self.__states()
         except Exception as exception:
             print(exception)
@@ -183,9 +186,12 @@ class Bpn(object):
 
     def phone_recharge(self):
         section = 'consultaCargaValorTP'
-        selector = f'#_menu_{section}'
+        selector = f'//*[@id="_menu_{section}"]/@realhref'
         attr = 'realhref'
-        state = extract_state(self.soup_home, selector=selector, attr=attr)
+        # print(self.response_home.text)
+        state = Selector(text=self.response_home.text).xpath(selector).get()
+        state = state.split('=')[1]
+        # state = extract_state(self.soup_home, selector=selector, attr=attr)
         # next
         params = {
             '_STATE_': state,
