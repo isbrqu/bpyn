@@ -72,7 +72,7 @@ class Bpn(object):
             '_STATE_': state,
         }
         url = bpn_url.second_login
-        header = bpn_header.dologin
+        header = bpn_header.login
         response = self.session.post(url, params=params, headers=header)
         json = response.json()
         return json
