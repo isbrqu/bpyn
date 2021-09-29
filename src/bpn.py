@@ -47,24 +47,24 @@ class Bpn(object):
         state = tag['value']
         self.__home(state)
 
+    def simple_request(self, section, params=None, headers=None):
+        url = bpn_url.make(section)
+        response = self.session.post(url, params=params, headers=headers)
+        return response
+
     def __first_login(self, username, is_inclu, pin):
         section = 'doLoginFirstStep'
-        url = bpn_url.make(section)
-        header = bpn_header.login
-        params = {
+        response = self.simple_request(section, params={
             'isInclu': is_inclu,
             'username': username,
             'pin': pin,
-        }
-        response = self.session.post(url, params=params, headers=header)
+        }, headers=bpn_header.login)
         soup = Soup(response.text, PARSER)
         return soup
 
     def __second_login(self, username, password, state):
         section = 'doLogin'
-        url = bpn_url.make(section)
-        header = bpn_header.login
-        params = {
+        response = self.simple_request(section, params={
             'username': username,
             'password': password,
             'jsonRequest': True,
@@ -73,8 +73,7 @@ class Bpn(object):
             'inclu': False,
             'recordarUsuario': False,
             '_STATE_': state,
-        }
-        response = self.session.post(url, params=params, headers=header)
+        }, headers=bpn_header.login)
         json = response.json()
         return json
     
