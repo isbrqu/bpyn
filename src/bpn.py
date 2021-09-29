@@ -48,13 +48,14 @@ class Bpn(object):
         self.__home(state)
 
     def __first_login(self, username, is_inclu, pin):
+        section = 'doLoginFirstStep'
+        url = bpn_url.make(section)
+        header = bpn_header.login
         params = {
             'isInclu': is_inclu,
             'username': username,
             'pin': pin,
         }
-        url = bpn_url.first_login
-        header = bpn_header.login
         response = self.session.post(url, params=params, headers=header)
         soup = Soup(response.text, PARSER)
         return soup
