@@ -33,6 +33,7 @@ class Bpn(object):
     def __init__(self, username, password, is_inclu=False, pin=''):
         self.username = username
         self.session = requests.Session()
+        self.session.cookies.set('cookieTest', 'true')
         self.state = {}
         self.soup = None
         self.__login(username, password, is_inclu, pin)
