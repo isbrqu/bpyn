@@ -2,11 +2,17 @@ from bs4 import BeautifulSoup as Soup
 import bpn_header
 import re
 import requests
-import bpn_url
 from scrapy.selector import Selector
 from scrapy.http import HtmlResponse
 
 PARSER = 'html5lib'
+SCHEME = 'https'
+DOMAIN = 'hb.redlink.com.ar'
+URL_DIRECTORY = 'bpn'
+URL_BASE = f'{SCHEME}://{DOMAIN}/{URL_DIRECTORY}'
+
+def make_url(name):
+    return f'{URL_BASE}/{name}.htm'
 
 def make_regex_state(string):
     return f'(?:"|\'){string}\.htm\?_STATE_=(.+)(?:"|\')'
@@ -46,7 +52,7 @@ class Bpn(object):
             'username': username,
             'pin': pin,
         }, headers=bpn_header.login)
-        page = HtmlResponse(url=bpn_url.make(section), body=response.content)
+        page = HtmlResponse(url=make_url(section), body=response.content)
         # second login
         selector = '//*[@id="LoginForm"]/input[@name="_STATE_"]/@value'
         state = page.xpath(selector).get()
@@ -67,11 +73,12 @@ class Bpn(object):
         response = self.simple_request(section, params={
             '_STATE_': state,
         }, headers=bpn_header.home)
+        self.home = HtmlResponse(url=make_url(section), body=response.content)
         self.soup_home = Soup(response.text, PARSER)
         self.response_home = response
 
     def simple_request(self, section, params=None, headers=None):
-        url = bpn_url.make(section)
+        url = make_url(section)
         response = self.session.post(url, params=params, headers=headers)
         return response
 
@@ -79,7 +86,7 @@ class Bpn(object):
         selector = '#_menu_movimientosHistoricos'
         state = realhref_state(self.soup_home, selector)
         print(state)
-        url = bpn_url.movements
+        url = make_url('movimientosHistoricos')
         params = {'_STATE_': state}
         header = bpn_header.movements
         response = self.session.post(url, params=params, headers=header)
@@ -116,7 +123,7 @@ class Bpn(object):
         params = {
             '_STATE_': state,
         }
-        url = bpn_url.make('consultaCredin')
+        url = make_url('consultaCredin')
         header = bpn_header.transferences
         response = self.session.post(url, params=params, headers=header)
         section = 'showConsultaCredin'
@@ -130,7 +137,7 @@ class Bpn(object):
             'maxRows': 11,
             'page': 2,
         }
-        url = bpn_url.make(section)
+        url = make_url(section)
         header = bpn_header.balance
         response = self.session.post(url, params=params, headers=header)
         json = response.json()
@@ -170,7 +177,7 @@ class Bpn(object):
         params = {
             '_STATE_': state,
         }
-        url = bpn_url.make(section)
+        url = make_url(section)
         header = bpn_header.transferences
         response = self.session.post(url, params=params, headers=header)
         section = 'getRecargasConsultaCargaValor'
@@ -190,7 +197,7 @@ class Bpn(object):
             'linesPerPage': 5,
             'codigoRubro': 'TP',
         }
-        url = bpn_url.make(section)
+        url = make_url(section)
         header = bpn_header.balance
         response = self.session.post(url, data=data, headers=header)
         json = response.json()
@@ -205,7 +212,7 @@ class Bpn(object):
         params = {
             '_STATE_': state,
         }
-        url = bpn_url.make('resumenTransferencias')
+        url = make_url('resumenTransferencias')
         header = bpn_header.transferences
         response = self.session.post(url, params=params, headers=header)
         # json
@@ -221,7 +228,7 @@ class Bpn(object):
             'orderingField': 'fechaMovimiento',
             'sortOrder': 'desc',
         }
-        url = bpn_url.make(section)
+        url = make_url(section)
         header = bpn_header.balance
         response = self.session.post(url, params=params, headers=header)
         json = response.json()
@@ -236,7 +243,7 @@ class Bpn(object):
         params = {
             '_STATE_': state,
         }
-        url = bpn_url.make(section)
+        url = make_url(section)
         header = bpn_header.transferences
         response = self.session.post(url, params=params, headers=header)
         # json
@@ -258,7 +265,7 @@ class Bpn(object):
         params = {
             '_STATE_': state,
         }
-        url = bpn_url.make(section)
+        url = make_url(section)
         header = bpn_header.balance
         response = self.session.post(url, params=params, headers=header)
         json = response.json()
@@ -283,7 +290,7 @@ class Bpn(object):
             'vencHasta': '',
         }
         params.update(params_extra)
-        url = bpn_url.make(section)
+        url = make_url(section)
         header = bpn_header.balance
         response = self.session.post(url, params=params, headers=header)
         json = response.json()
@@ -293,7 +300,7 @@ class Bpn(object):
         pass
 
     def logout(self):
-        url = bpn_url.logout
+        url = make_url('logout')
         header = bpn_header.logout
         response = self.session.get(url, headers=header)
         json = response.json()
