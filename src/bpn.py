@@ -39,32 +39,18 @@ class Bpn(object):
         self.__login(username, password, is_inclu, pin)
 
     def __login(self, username, password, is_inclu, pin):
-        soup = self.__first_login(username, is_inclu, pin)
-        tag = soup.select_one('#LoginForm input[name="_STATE_"]')
-        state = tag['value']
-        self.__second_login(username, password, state)
-        tag = soup.select_one('#RedirectHomeForm input[name="_STATE_"]')
-        state = tag['value']
-        self.__home(state)
-
-    def simple_request(self, section, params=None, headers=None):
-        url = bpn_url.make(section)
-        response = self.session.post(url, params=params, headers=headers)
-        return response
-
-    def __first_login(self, username, is_inclu, pin):
+        # first login
         section = 'doLoginFirstStep'
         response = self.simple_request(section, params={
             'isInclu': is_inclu,
             'username': username,
             'pin': pin,
         }, headers=bpn_header.login)
-        soup = Soup(response.text, PARSER)
-        return soup
-
-    def __second_login(self, username, password, state):
+        # second login
         section = 'doLogin'
-        response = self.simple_request(section, params={
+        selector = '//*[@id="LoginForm"]/input[@name="_STATE_"]/@value'
+        state = Selector(text=response.text).xpath(selector).get()
+        self.simple_request(section, params={
             'username': username,
             'password': password,
             'jsonRequest': True,
@@ -74,31 +60,21 @@ class Bpn(object):
             'recordarUsuario': False,
             '_STATE_': state,
         }, headers=bpn_header.login)
-        json = response.json()
-        return json
-    
-    def __home(self, state):
-        try:
-            params = {
-                '_STATE_': state,
-            }
-            url = bpn_url.home
-            header = bpn_header.home
-            response = self.session.post(url, params=params, headers=header)
-            self.soup_home = Soup(response.text, PARSER)
-            self.response_home = response
-            self.__states()
-        except Exception as exception:
-            print(exception)
-        finally:
-            # self.logout()
-            pass
+        # entry to home
+        section = 'home'
+        selector = '//*[@id="RedirectHomeForm"]/input[@name="_STATE_"]/@value'
+        state = Selector(text=response.text).xpath(selector).get()
+        response = self.simple_request(section, params={
+            '_STATE_': state,
+        }, headers=bpn_header.home)
+        self.soup_home = Soup(response.text, PARSER)
+        self.response_home = response
 
-    def __states(self):
-        regex = r'(\w+).htm\?_STATE_=(.+)(?:"|\')'
-        pattern = re.compile(regex)
-        self.states = dict(pattern.findall(self.soup_home.text))
-    
+    def simple_request(self, section, params=None, headers=None):
+        url = bpn_url.make(section)
+        response = self.session.post(url, params=params, headers=headers)
+        return response
+
     def movements(self):
         selector = '#_menu_movimientosHistoricos'
         state = realhref_state(self.soup_home, selector)
