@@ -11,6 +11,9 @@ DOMAIN = 'hb.redlink.com.ar'
 URL_DIRECTORY = 'bpn'
 URL_BASE = f'{SCHEME}://{DOMAIN}/{URL_DIRECTORY}'
 
+XPATH_FORM = '//form[@id=$form_id]/input[@name="_STATE_"]/@value'
+XPATH_A = f'//a[@id=$a_id]/@realhref'
+
 def make_url(name):
     return f'{URL_BASE}/{name}.htm'
 
@@ -171,20 +174,15 @@ class Bpn(object):
 
     def phone_recharge(self):
         section = 'consultaCargaValorTP'
-        selector = f'//*[@id="_menu_{section}"]/@realhref'
-        state = Selector(text=self.response_home.text).xpath(selector).get()
-        state = state.split('=')[1]
-        params = {
+        a_id = f'_menu_{section}'
+        state = self.home.xpath(XPATH_A, a_id=a_id).re_first(r'=(.*)')
+        response = self.simple_request(section, params={
             '_STATE_': state,
-        }
-        url = make_url(section)
-        header = bpn_header.transferences
-        response = self.session.post(url, params=params, headers=header)
+        }, headers=bpn_header.transferences)
+        page = HtmlResponse(url='', body=response.content)
         section = 'getRecargasConsultaCargaValor'
-        selector = '#consultacargavalorForm input[name="_STATE_"]'
-        attr = 'value'
-        state = extract_state(response.text, selector=selector, attr=attr)
-        data = {
+        state = page.xpath(XPATH_FORM, form_id='consultacargavalorForm').get()
+        response = self.simple_request(section, params={
             '_STATE_': state,
             'codigoEmpresa': '',
             'usuario': '',
@@ -196,10 +194,7 @@ class Bpn(object):
             'pageNumber': 1,
             'linesPerPage': 5,
             'codigoRubro': 'TP',
-        }
-        url = make_url(section)
-        header = bpn_header.balance
-        response = self.session.post(url, data=data, headers=header)
+        }, headers=bpn_header.balance)
         json = response.json()
         # json = json['response']['data']
         return json
