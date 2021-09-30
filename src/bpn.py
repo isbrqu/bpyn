@@ -63,7 +63,8 @@ class Bpn(object):
         # entry to home
         selector = '//*[@id="RedirectHomeForm"]/input[@name="_STATE_"]/@value'
         state = page.xpath(selector).get()
-        response = self.simple_request('home', params={
+        section = 'home'
+        response = self.simple_request(section, params={
             '_STATE_': state,
         }, headers=bpn_header.home)
         self.soup_home = Soup(response.text, PARSER)
@@ -164,12 +165,8 @@ class Bpn(object):
     def phone_recharge(self):
         section = 'consultaCargaValorTP'
         selector = f'//*[@id="_menu_{section}"]/@realhref'
-        attr = 'realhref'
-        # print(self.response_home.text)
         state = Selector(text=self.response_home.text).xpath(selector).get()
         state = state.split('=')[1]
-        # state = extract_state(self.soup_home, selector=selector, attr=attr)
-        # next
         params = {
             '_STATE_': state,
         }
