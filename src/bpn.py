@@ -77,7 +77,7 @@ class Bpn(object):
         response = self.request(section, params={
             '_STATE_': state,
         }, headers=bpn_header.home)
-        self.home = HtmlResponse(url=make_url(section), body=response.content)
+        self.home = HtmlResponse(url='', body=response.content)
         self.soup_home = Soup(response.text, PARSER)
         self.response_home = response
 
@@ -174,6 +174,7 @@ class Bpn(object):
         print(state)
 
     def phone_recharge(self):
+        # first request
         section = 'consultaCargaValorTP'
         a_id = f'_menu_{section}'
         state = self.home.xpath(XPATH_A, a_id=a_id).re_first(r'=(.*)')
@@ -181,8 +182,10 @@ class Bpn(object):
             '_STATE_': state,
         }, headers=bpn_header.transferences)
         page = HtmlResponse(url='', body=response.content)
+        # get values
         section = 'getRecargasConsultaCargaValor'
-        state = page.xpath(XPATH_FORM, form_id='consultacargavalorForm').get()
+        form_id = 'consultacargavalorForm'
+        state = page.xpath(XPATH_FORM, form_id=form_id).get()
         response = self.request(section, params={
             '_STATE_': state,
             'codigoEmpresa': '',
@@ -197,7 +200,6 @@ class Bpn(object):
             'codigoRubro': 'TP',
         }, headers=bpn_header.balance)
         json = response.json()
-        # json = json['response']['data']
         return json
 
     def transferences(self):
