@@ -50,7 +50,7 @@ class Bpn(object):
     def __login(self, username, password, is_inclu, pin):
         # first login
         section = 'doLoginFirstStep'
-        response = self.simple_request(section, params={
+        response = self.request(section, params={
             'isInclu': is_inclu,
             'username': username,
             'pin': pin,
@@ -60,7 +60,7 @@ class Bpn(object):
         section = 'doLogin'
         form_id = 'LoginForm'
         state = page.xpath(XPATH_FORM, form_id=form_id).get()
-        self.simple_request(section, params={
+        self.request(section, params={
             'username': username,
             'password': password,
             'jsonRequest': True,
@@ -74,14 +74,14 @@ class Bpn(object):
         section = 'home'
         form_id = 'RedirectHomeForm'
         state = page.xpath(XPATH_FORM, form_id=form_id).get()
-        response = self.simple_request(section, params={
+        response = self.request(section, params={
             '_STATE_': state,
         }, headers=bpn_header.home)
         self.home = HtmlResponse(url=make_url(section), body=response.content)
         self.soup_home = Soup(response.text, PARSER)
         self.response_home = response
 
-    def simple_request(self, section, params=None, headers=None):
+    def request(self, section, params=None, headers=None):
         url = make_url(section)
         response = self.session.post(url, params=params, headers=headers)
         return response
@@ -177,13 +177,13 @@ class Bpn(object):
         section = 'consultaCargaValorTP'
         a_id = f'_menu_{section}'
         state = self.home.xpath(XPATH_A, a_id=a_id).re_first(r'=(.*)')
-        response = self.simple_request(section, params={
+        response = self.request(section, params={
             '_STATE_': state,
         }, headers=bpn_header.transferences)
         page = HtmlResponse(url='', body=response.content)
         section = 'getRecargasConsultaCargaValor'
         state = page.xpath(XPATH_FORM, form_id='consultacargavalorForm').get()
-        response = self.simple_request(section, params={
+        response = self.request(section, params={
             '_STATE_': state,
             'codigoEmpresa': '',
             'usuario': '',
