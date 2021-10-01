@@ -17,50 +17,32 @@ XPATH_A = f'//a[@id=$a_id]/@realhref'
 def make_url(name):
     return f'{URL_BASE}/{name}.htm'
 
-def make_regex_state(string):
-    return f'(?:"|\'){string}\.htm\?_STATE_=(.+)(?:"|\')'
-
-def extract_state(obj, selector=None, attr=None, regex=None):
-    if selector and attr:
-        soup = Soup(obj, PARSER) if isinstance(obj, str) else obj
-        tag = soup.select_one(selector)
-        state = tag[attr]
-        state = state.split('=')[1] if '=' in state else state
-    elif regex:
-        pattern = re.compile(regex)
-        state = pattern.search(obj).group(1)
-    else:
-        raise Exception("selector, attr or regex isn't define")
-    return state
-
-def write_html(name, response):
-    with open(f'{name}.html', 'w', encoding='utf-8') as html:
-        html.write(response.text)
-
 class Bpn(object):
 
     def __init__(self, username, password, is_inclu=False, pin=''):
         self.username = username
         self.session = requests.Session()
         self.session.cookies.set('cookieTest', 'true')
-        self.state = {}
-        self.soup = None
         self.__login(username, password, is_inclu, pin)
 
     def __login(self, username, password, is_inclu, pin):
         # first login
         section = 'doLoginFirstStep'
-        response = self.request(section, params={
+        url = make_url(section)
+        headers = bpn_header.login
+        response = self.session.post(url, headers=headers, params={
             'isInclu': is_inclu,
             'username': username,
             'pin': pin,
-        }, headers=bpn_header.login)
-        page = HtmlResponse(url=make_url(section), body=response.content)
+        })
+        page = HtmlResponse(url, body=response.content)
         # second login
         section = 'doLogin'
         form_id = 'LoginForm'
         state = page.xpath(XPATH_FORM, form_id=form_id).get()
-        self.request(section, params={
+        url = make_url(section)
+        headers = bpn_header.login
+        response = self.session.post(url, headers=headers, params={
             'username': username,
             'password': password,
             'jsonRequest': True,
@@ -69,22 +51,17 @@ class Bpn(object):
             'inclu': False,
             'recordarUsuario': False,
             '_STATE_': state,
-        }, headers=bpn_header.login)
+        })
         # entry to home
         section = 'home'
         form_id = 'RedirectHomeForm'
         state = page.xpath(XPATH_FORM, form_id=form_id).get()
-        response = self.request(section, params={
-            '_STATE_': state,
-        }, headers=bpn_header.home)
-        self.home = HtmlResponse(url='', body=response.content)
-        self.soup_home = Soup(response.text, PARSER)
-        self.response_home = response
-
-    def request(self, section, params=None, headers=None):
         url = make_url(section)
-        response = self.session.post(url, params=params, headers=headers)
-        return response
+        headers = bpn_header.home
+        response = self.session.post(url, headers=headers, params={
+            '_STATE_': state,
+        })
+        self.home = HtmlResponse(url, body=response.content)
 
     def movements(self):
         selector = '#_menu_movimientosHistoricos'
@@ -178,15 +155,19 @@ class Bpn(object):
         section = 'consultaCargaValorTP'
         a_id = f'_menu_{section}'
         state = self.home.xpath(XPATH_A, a_id=a_id).re_first(r'=(.*)')
-        response = self.request(section, params={
+        url = make_url(section)
+        headers = bpn_header.transferences
+        response = self.session.post(url, headers=headers, params={
             '_STATE_': state,
-        }, headers=bpn_header.transferences)
-        page = HtmlResponse(url='', body=response.content)
+        })
+        page = HtmlResponse(url, body=response.content)
         # get values
         section = 'getRecargasConsultaCargaValor'
         form_id = 'consultacargavalorForm'
         state = page.xpath(XPATH_FORM, form_id=form_id).get()
-        response = self.request(section, params={
+        url = make_url(section)
+        headers = bpn_header.balance
+        response = self.session.post(url, headers=headers, params={
             '_STATE_': state,
             'codigoEmpresa': '',
             'usuario': '',
@@ -198,7 +179,7 @@ class Bpn(object):
             'pageNumber': 1,
             'linesPerPage': 5,
             'codigoRubro': 'TP',
-        }, headers=bpn_header.balance)
+        })
         json = response.json()
         return json
 
