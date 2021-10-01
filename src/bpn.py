@@ -11,9 +11,6 @@ DOMAIN = 'hb.redlink.com.ar'
 URL_DIRECTORY = 'bpn'
 URL_BASE = f'{SCHEME}://{DOMAIN}/{URL_DIRECTORY}'
 
-XPATH_FORM = '//form[@id=$form_id]/input[@name="_STATE_"]/@value'
-XPATH_A = f'//a[@id=$a_id]/@realhref'
-
 def make_url(name):
     return f'{URL_BASE}/{name}.htm'
 
@@ -38,8 +35,8 @@ class Bpn(object):
         page = HtmlResponse(url, body=response.content)
         # second login
         section = 'doLogin'
-        form_id = 'LoginForm'
-        state = page.xpath(XPATH_FORM, form_id=form_id).get()
+        selector = '#LoginForm [name="_STATE_"]'
+        state = page.css(selector).attrib['value']
         url = make_url(section)
         headers = bpn_header.login
         response = self.session.post(url, headers=headers, params={
@@ -54,8 +51,8 @@ class Bpn(object):
         })
         # entry to home
         section = 'home'
-        form_id = 'RedirectHomeForm'
-        state = page.xpath(XPATH_FORM, form_id=form_id).get()
+        selector = '#RedirectHomeForm [name="_STATE_"]'
+        state = page.css(selector).attrib['value']
         url = make_url(section)
         headers = bpn_header.home
         response = self.session.post(url, headers=headers, params={
@@ -153,8 +150,8 @@ class Bpn(object):
     def phone_recharge(self):
         # first request
         section = 'consultaCargaValorTP'
-        a_id = f'_menu_{section}'
-        state = self.home.xpath(XPATH_A, a_id=a_id).re_first(r'=(.*)')
+        selector = f'#_menu_{section}'
+        state = self.home.css(selector).xpath('@realhref').re_first(r'=(.*)')
         url = make_url(section)
         headers = bpn_header.transferences
         response = self.session.post(url, headers=headers, params={
@@ -163,8 +160,8 @@ class Bpn(object):
         page = HtmlResponse(url, body=response.content)
         # get values
         section = 'getRecargasConsultaCargaValor'
-        form_id = 'consultacargavalorForm'
-        state = page.xpath(XPATH_FORM, form_id=form_id).get()
+        selector = '#consultacargavalorForm [name="_STATE_"]'
+        state = page.css(selector).attrib['value']
         url = make_url(section)
         headers = bpn_header.balance
         response = self.session.post(url, headers=headers, params={
