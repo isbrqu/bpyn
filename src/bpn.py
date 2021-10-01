@@ -57,9 +57,10 @@ class Bpn(object):
         }, headers=bpn_header.login)
         page = HtmlResponse(url=make_url(section), body=response.content)
         # second login
-        selector = '//*[@id="LoginForm"]/input[@name="_STATE_"]/@value'
-        state = page.xpath(selector).get()
-        self.simple_request('doLogin', params={
+        section = 'doLogin'
+        form_id = 'LoginForm'
+        state = page.xpath(XPATH_FORM, form_id=form_id).get()
+        self.simple_request(section, params={
             'username': username,
             'password': password,
             'jsonRequest': True,
@@ -70,9 +71,9 @@ class Bpn(object):
             '_STATE_': state,
         }, headers=bpn_header.login)
         # entry to home
-        selector = '//*[@id="RedirectHomeForm"]/input[@name="_STATE_"]/@value'
-        state = page.xpath(selector).get()
         section = 'home'
+        form_id = 'RedirectHomeForm'
+        state = page.xpath(XPATH_FORM, form_id=form_id).get()
         response = self.simple_request(section, params={
             '_STATE_': state,
         }, headers=bpn_header.home)
