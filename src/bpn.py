@@ -40,6 +40,7 @@ class Bpn(object):
         url = make_url(section)
         headers = bpn_header.login
         response = self.session.post(url, headers=headers, params={
+            '_STATE_': state,
             'username': username,
             'password': password,
             'jsonRequest': True,
@@ -47,7 +48,6 @@ class Bpn(object):
             'pcCompartida': True,
             'inclu': False,
             'recordarUsuario': False,
-            '_STATE_': state,
         })
         # entry to home
         section = 'home'
