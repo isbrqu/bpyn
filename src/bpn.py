@@ -183,19 +183,22 @@ class Bpn(object):
     def transferences(self):
         section = 'resumenTransferencias'
         selector = f'#_menu_{section}'
-        attr = 'realhref'
-        state = extract_state(self.soup_home, selector=selector, attr=attr)
-        params = {
+        state = self.home.css(selector).xpath('@realhref').re_first(r'=(.*)')
+        url = make_url(section)
+        headers = bpn_header.transferences
+        response = self.session.post(url, headers=headers, params={
             '_STATE_': state,
-        }
-        url = make_url('resumenTransferencias')
-        header = bpn_header.transferences
-        response = self.session.post(url, params=params, headers=header)
-        # json
+        })
+        page = HtmlResponse(url, body=response.content)
+        # get values
         section =  'transferenciasByFilter'
-        regex = make_regex_state(section)
-        state = extract_state(response.text, regex=regex)
-        params = {
+        text = 'var urlTransferenciasByFilter = '
+        selector = f'//script[contains(. , "{text}")]/text()'
+        regex = f'{text}.+=(.+)(:?"|\');'
+        state = page.xpath(selector).re_first(regex)
+        url = make_url(section)
+        headers = bpn_header.balance
+        response = self.session.post(url, headers=headers, params={
             '_STATE_': state,
             'fechaDesde': '01/01/1999',
             'fechaHasta': '30/12/2021',
@@ -203,12 +206,8 @@ class Bpn(object):
             'pageNumber': 1,
             'orderingField': 'fechaMovimiento',
             'sortOrder': 'desc',
-        }
-        url = make_url(section)
-        header = bpn_header.balance
-        response = self.session.post(url, params=params, headers=header)
+        })
         json = response.json()
-        # json = json['response']['data']
         return json
 
     def payments_made(self):
