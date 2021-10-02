@@ -217,63 +217,46 @@ class Bpn(object):
     def payments_made(self):
         section = 'pagosRealizados'
         selector = f'#_menu_{section}'
-        attr = 'realhref'
-        state = extract_state(self.soup_home, selector=selector, attr=attr)
-        params = {
-            '_STATE_': state,
-        }
+        state = self.home.css(selector).xpath('@realhref').re_first(r'=(.*)')
         url = make_url(section)
-        header = bpn_header.transferences
-        response = self.session.post(url, params=params, headers=header)
-        # json
-        json = self.__entity(response)
-        item = json['response']['data'][0]['adheridos'][0]
-        print(item)
-        json = self.__payments_made(response, params_extra={
-            'codAbre': item['codigoAbre'],
-            'ente': item['codigoEnte'],
+        headers = bpn_header.transferences
+        response = self.session.post(url, headers=headers, params={
+            '_STATE_': state,
         })
-        # json
-        # json = json['response']['data']
-        return json
-
-    def __entity(self, response):
+        page = HtmlResponse(url, body=response.content)
+        # get entities
         section =  'obtenerLinkPagosEnte'
         regex = make_regex_state(section)
-        state = extract_state(response.text, regex=regex)
-        params = {
-            '_STATE_': state,
-        }
+        state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
         url = make_url(section)
-        header = bpn_header.balance
-        response = self.session.post(url, params=params, headers=header)
+        headers = bpn_header.balance
+        response = self.session.post(url, headers=headers, params={
+            '_STATE_': state,
+        })
         json = response.json()
-        return json
-
-    def __payments_made(self, response, params_extra={}):
+        # get values
         section = 'getPagosRealizados'
-        selector = '#consultaPagosRealizadosForm input[name="_STATE_"]'
-        attr = 'value'
-        state = extract_state(response.text, selector=selector, attr=attr)
-        params = {
-            '_STATE_': state,
-            'linkPagosEnte': '',
-            'pagSgte': '',
-            'pagAnt': '',
-            'pagAct': 0,
-            'fechaDesde': '28/09/1991',
-            'fechaHasta': '28/09/2021',
-            'importeDesde': '',
-            'importeHasta': '',
-            'vencDesde': '28/09/2021',
-            'vencHasta': '',
-        }
-        params.update(params_extra)
+        selector = '#consultaPagosRealizadosForm [name="_STATE_"]'
+        state = page.css(selector).attrib['value']
         url = make_url(section)
-        header = bpn_header.balance
-        response = self.session.post(url, params=params, headers=header)
-        json = response.json()
-        return json
+        headers = bpn_header.balance
+        for entity in json['response']['data'][0]['adheridos']:
+            response = self.session.post(url, headers=headers, params={
+                '_STATE_': state,
+                'codAbre': entity['codigoAbre'],
+                'ente': entity['codigoEnte'],
+                # 'linkPagosEnte': '',
+                # 'pagSgte': '',
+                # 'pagAnt': '',
+                'pagAct': 0,
+                'fechaDesde': '28/09/1991',
+                'fechaHasta': '28/09/2021',
+                # 'importeDesde': '',
+                # 'importeHasta': '',
+                'vencDesde': '28/09/2021',
+                # 'vencHasta': '',
+            })
+            yield response.json()
 
     def accounts_transferences(self):
         pass
