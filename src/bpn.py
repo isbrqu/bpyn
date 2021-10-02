@@ -11,6 +11,9 @@ DOMAIN = 'hb.redlink.com.ar'
 URL_DIRECTORY = 'bpn'
 URL_BASE = f'{SCHEME}://{DOMAIN}/{URL_DIRECTORY}'
 
+XPATH_SCRIPT = '//script[contains(. , $text)]/text()'
+# REGEX_STATE = 
+
 def make_url(name):
     return f'{URL_BASE}/{name}.htm'
 
@@ -192,10 +195,8 @@ class Bpn(object):
         page = HtmlResponse(url, body=response.content)
         # get values
         section =  'transferenciasByFilter'
-        text = 'var urlTransferenciasByFilter = '
-        selector = f'//script[contains(. , "{text}")]/text()'
-        regex = f'{text}.+=(.+)(:?"|\');'
-        state = page.xpath(selector).re_first(regex)
+        regex = f'{section}\.htm.+=(.+)(:?"|\');'
+        state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
         url = make_url(section)
         headers = bpn_header.balance
         response = self.session.post(url, headers=headers, params={
