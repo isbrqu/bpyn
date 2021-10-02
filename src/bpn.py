@@ -17,6 +17,9 @@ XPATH_SCRIPT = '//script[contains(. , $text)]/text()'
 def make_url(name):
     return f'{URL_BASE}/{name}.htm'
 
+def make_regex_state(name):
+    return f'{name}\.htm.+=(.+)(:?"|\');'
+
 class Bpn(object):
 
     def __init__(self, username, password, is_inclu=False, pin=''):
@@ -195,7 +198,7 @@ class Bpn(object):
         page = HtmlResponse(url, body=response.content)
         # get values
         section =  'transferenciasByFilter'
-        regex = f'{section}\.htm.+=(.+)(:?"|\');'
+        regex = make_regex_state(section)
         state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
         url = make_url(section)
         headers = bpn_header.balance
