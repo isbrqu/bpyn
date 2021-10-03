@@ -28,7 +28,6 @@ class Bpn(object):
         self.session = requests.Session()
         self.session.cookies.set('cookieTest', 'true')
         self.__login(username, password, is_inclu, pin)
-        self.__accounts = None
 
     def __login(self, username, password, is_inclu, pin):
         # first login
@@ -148,6 +147,28 @@ class Bpn(object):
         selector = '#_menu_gestionDocumentosElectronicosConsulta'
         state = realhref_state(self.soup_home, selector)
         print(state)
+
+    def accounts(self):
+        section = 'saldos'
+        selector = f'#_menu_{section}'
+        state = self.home.css(selector).xpath('@realhref').re_first(r'=(.*)')
+        url = make_url(section)
+        headers = bpn_header.transferences
+        response = self.session.post(url, headers=headers, params={
+            '_STATE_': state,
+        })
+        page = HtmlResponse(url, body=response.content)
+        # get accounts
+        section = 'getCuentas'
+        regex = make_regex_state(section)
+        state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
+        url = make_url(section)
+        headers = bpn_header.balance
+        response = self.session.post(url, headers=headers, params={
+            '_STATE_': state,
+        })
+        json = response.json()
+        return json
 
     def balances(self):
         section = 'saldos'
