@@ -28,6 +28,7 @@ class Bpn(object):
         self.session = requests.Session()
         self.session.cookies.set('cookieTest', 'true')
         self.__login(username, password, is_inclu, pin)
+        self.__accounts = None
 
     def __login(self, username, password, is_inclu, pin):
         # first login
@@ -149,9 +150,38 @@ class Bpn(object):
         print(state)
 
     def balances(self):
-        selector = '#_menu_saldos'
-        state = realhref_state(self.soup_home, selector)
-        print(state)
+        section = 'saldos'
+        selector = f'#_menu_{section}'
+        state = self.home.css(selector).xpath('@realhref').re_first(r'=(.*)')
+        url = make_url(section)
+        headers = bpn_header.transferences
+        response = self.session.post(url, headers=headers, params={
+            '_STATE_': state,
+        })
+        page = HtmlResponse(url, body=response.content)
+        # get accounts
+        section = 'getCuentas'
+        regex = make_regex_state(section)
+        state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
+        url = make_url(section)
+        headers = bpn_header.balance
+        response = self.session.post(url, headers=headers, params={
+            '_STATE_': state,
+        })
+        json = response.json()
+        # get balances
+        section = 'getSaldo'
+        regex = make_regex_state(section)
+        state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
+        url = make_url(section)
+        headers = bpn_header.balance
+        for account in json['response']['data']:
+            response = self.session.post(url, headers=headers, params={
+                '_STATE_': state,
+                'numero': account['numero'],
+                'tipoTandem': account['tipoTandem']
+            })
+            yield response.json()
 
     def phone_recharge(self):
         # first request
