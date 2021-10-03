@@ -3,6 +3,7 @@ import bpn_header
 import re
 import requests
 from scrapy.selector import Selector
+from pprint import pprint
 from scrapy.http import HtmlResponse
 
 PARSER = 'html5lib'
@@ -101,31 +102,30 @@ class Bpn(object):
         print(state)
 
     def credin(self):
-        selector = '#_menu_consultaCredin'
-        state = realhref_state(self.soup_home, selector)
-        # next
-        params = {
+        section = 'consultaCredin'
+        selector = f'#_menu_{section}'
+        state = self.home.css(selector).xpath('@realhref').re_first(r'=(.*)')
+        url = make_url(section)
+        headers = bpn_header.transferences
+        response = self.session.post(url, headers=headers, params={
             '_STATE_': state,
-        }
-        url = make_url('consultaCredin')
-        header = bpn_header.transferences
-        response = self.session.post(url, params=params, headers=header)
+        })
+        page = HtmlResponse(url, body=response.content)
+        # get values
         section = 'showConsultaCredin'
-        soup = Soup(response.text, PARSER)
-        state = soup.select_one('#grilla')['source'].split('=')[1]
-        params = {
+        selector = '#grilla'
+        state = page.css(selector).xpath('@source').re_first(r'=(.*)')
+        url = make_url(section)
+        headers = bpn_header.balance
+        response = self.session.post(url, headers=headers, params={
             '_STATE_': state,
             'fechaDesde': '01/01/1999',
             'fechaHasta': '30/09/2021',
             'sentidoCredin': 'Enviados',
             'maxRows': 11,
             'page': 2,
-        }
-        url = make_url(section)
-        header = bpn_header.balance
-        response = self.session.post(url, params=params, headers=header)
+        })
         json = response.json()
-        # json = json['response']['data']
         return json
 
     def cbu(self):
