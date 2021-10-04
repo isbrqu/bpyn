@@ -35,11 +35,12 @@ def lazy_property(fn):
 
 class Bpn(object):
 
-    def __init__(self, username, password, is_inclu=False, pin=''):
+    def __init__(self, username, password):
         self.username = username
+        self.password = password
         self.session = requests.Session()
         self.session.cookies.set('cookieTest', 'true')
-        self.__login(username, password, is_inclu, pin)
+        self.__login(username, password)
 
     @lazy_property
     def balance_page(self):
@@ -54,18 +55,23 @@ class Bpn(object):
         page = HtmlResponse(url, body=response.content)
         return page
 
-    def __login(self, username, password, is_inclu, pin):
+    @lazy_property
+    def login_page(self):
         # first login
         section = 'doLoginFirstStep'
         url = make_url(section)
         headers = bpn_header.login
         response = self.session.post(url, headers=headers, params={
-            'isInclu': is_inclu,
-            'username': username,
-            'pin': pin,
+            'isInclu': False,
+            'username': self.username,
+            'pin': '',
         })
         page = HtmlResponse(url, body=response.content)
-        # second login
+        return page
+
+    def __login(self, username, password):
+        page = self.login_page
+        # second login, get LINKS cookie
         section = 'doLogin'
         selector = '#LoginForm [name="_STATE_"]'
         state = page.css(selector).attrib['value']
