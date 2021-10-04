@@ -5,6 +5,7 @@ import requests
 from scrapy.selector import Selector
 from pprint import pprint
 from scrapy.http import HtmlResponse
+from functools import wraps
 
 PARSER = 'html5lib'
 SCHEME = 'https'
@@ -21,6 +22,17 @@ def make_url(name):
 def make_regex_state(name):
     return f'{name}\.htm.+=(.+)(:?"|\');'
 
+def lazy_property(fn):
+    '''Decorator that makes a property lazy-evaluated.
+    '''
+    attr_name = '_lazy_' + fn.__name__
+    @property
+    def _lazy_property(self):
+        if not hasattr(self, attr_name):
+            setattr(self, attr_name, fn(self))
+        return getattr(self, attr_name)
+    return _lazy_property
+
 class Bpn(object):
 
     def __init__(self, username, password, is_inclu=False, pin=''):
@@ -28,6 +40,20 @@ class Bpn(object):
         self.session = requests.Session()
         self.session.cookies.set('cookieTest', 'true')
         self.__login(username, password, is_inclu, pin)
+
+    @lazy_property
+    def balance_page(self):
+        section = 'saldos'
+        selector = f'#_menu_{section}'
+        state = self.home.css(selector).xpath('@realhref').re_first(r'=(.*)')
+        url = make_url(section)
+        headers = bpn_header.transferences
+        response = self.session.post(url, headers=headers, params={
+            '_STATE_': state,
+        })
+        page = HtmlResponse(url, body=response.content)
+        print('hola mundo')
+        return page
 
     def __login(self, username, password, is_inclu, pin):
         # first login
@@ -149,16 +175,8 @@ class Bpn(object):
         print(state)
 
     def accounts(self):
-        section = 'saldos'
-        selector = f'#_menu_{section}'
-        state = self.home.css(selector).xpath('@realhref').re_first(r'=(.*)')
-        url = make_url(section)
-        headers = bpn_header.transferences
-        response = self.session.post(url, headers=headers, params={
-            '_STATE_': state,
-        })
-        page = HtmlResponse(url, body=response.content)
         # get accounts
+        page = self.balance_page
         section = 'getCuentas'
         regex = make_regex_state(section)
         state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
