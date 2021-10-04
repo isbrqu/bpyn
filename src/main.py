@@ -8,7 +8,7 @@ password = config.password
 bpn = Bpn(username, password)
 
 try:
-    for balance in bpn.balances():
+    for balance in bpn.balances:
         print(balance)
     # result = bpn.balances()
     # print(result)

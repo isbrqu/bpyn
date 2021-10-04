@@ -188,6 +188,7 @@ class Bpn(object):
         json = response.json()
         return json
 
+    @property
     def balances(self):
         page = self.balance_page
         json = self.accounts
