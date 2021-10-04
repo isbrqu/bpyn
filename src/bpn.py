@@ -52,7 +52,6 @@ class Bpn(object):
             '_STATE_': state,
         })
         page = HtmlResponse(url, body=response.content)
-        print('hola mundo')
         return page
 
     def __login(self, username, password, is_inclu, pin):
@@ -174,6 +173,7 @@ class Bpn(object):
         state = realhref_state(self.soup_home, selector)
         print(state)
 
+    @lazy_property
     def accounts(self):
         # get accounts
         page = self.balance_page
@@ -189,25 +189,8 @@ class Bpn(object):
         return json
 
     def balances(self):
-        section = 'saldos'
-        selector = f'#_menu_{section}'
-        state = self.home.css(selector).xpath('@realhref').re_first(r'=(.*)')
-        url = make_url(section)
-        headers = bpn_header.transferences
-        response = self.session.post(url, headers=headers, params={
-            '_STATE_': state,
-        })
-        page = HtmlResponse(url, body=response.content)
-        # get accounts
-        section = 'getCuentas'
-        regex = make_regex_state(section)
-        state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
-        url = make_url(section)
-        headers = bpn_header.balance
-        response = self.session.post(url, headers=headers, params={
-            '_STATE_': state,
-        })
-        json = response.json()
+        page = self.balance_page
+        json = self.accounts
         # get balances
         section = 'getSaldo'
         regex = make_regex_state(section)
