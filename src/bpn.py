@@ -285,17 +285,24 @@ class Bpn(object):
         json = response.json()
         return json
 
-    def payments_made(self):
+    @lazy_property
+    def payments_page(self):
+        page = self.home_page
         section = 'pagosRealizados'
         selector = f'#_menu_{section}'
-        state = self.home.css(selector).xpath('@realhref').re_first(r'=(.*)')
+        state = page.css(selector).xpath('@realhref').re_first(r'=(.*)')
         url = make_url(section)
         headers = bpn_header.transferences
         response = self.session.post(url, headers=headers, params={
             '_STATE_': state,
         })
         page = HtmlResponse(url, body=response.content)
+        return page
+
+    @lazy_property
+    def entities(self):
         # get entities
+        page = self.payments_page
         section =  'obtenerLinkPagosEnte'
         regex = make_regex_state(section)
         state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
@@ -305,7 +312,13 @@ class Bpn(object):
             '_STATE_': state,
         })
         json = response.json()
+        return json
+
+    @property
+    def payments_made(self):
         # get values
+        page = self.payments_page
+        json = self.entities
         section = 'getPagosRealizados'
         selector = '#consultaPagosRealizadosForm [name="_STATE_"]'
         state = page.css(selector).attrib['value']

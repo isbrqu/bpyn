@@ -8,10 +8,8 @@ password = config.password
 bpn = Bpn(username, password)
 
 try:
-    for balance in bpn.balances:
-        print(balance)
-    # result = bpn.balances()
-    # print(result)
+    # pprint(bpn.payments_made)
+    [pprint(payments_made) for payments_made in bpn.payments_made]
 finally:
     print(bpn.logout())
 
