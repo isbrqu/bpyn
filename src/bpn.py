@@ -221,6 +221,23 @@ class Bpn(object):
             yield response.json()
 
     @property
+    def total_balance(self):
+        # required to calculate the total balance
+        [_ for _ in self.balances]
+        # normal query
+        page = self.balance_page
+        section = 'getSaldosTotales'
+        regex = make_regex_state(section)
+        state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
+        url = make_url(section)
+        headers = bpn_header.balance
+        response = self.session.post(url, headers=headers, params={
+            '_STATE_': state,
+        })
+        json = response.json()
+        return json
+
+    @property
     def phone_recharge(self):
         # first request
         page = self.home_page
