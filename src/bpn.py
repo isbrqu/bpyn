@@ -220,11 +220,13 @@ class Bpn(object):
             })
             yield response.json()
 
+    @property
     def phone_recharge(self):
         # first request
+        page = self.home_page
         section = 'consultaCargaValorTP'
         selector = f'#_menu_{section}'
-        state = self.home.css(selector).xpath('@realhref').re_first(r'=(.*)')
+        state = page.css(selector).xpath('@realhref').re_first(r'=(.*)')
         url = make_url(section)
         headers = bpn_header.transferences
         response = self.session.post(url, headers=headers, params={
