@@ -44,9 +44,10 @@ class Bpn(object):
 
     @lazy_property
     def balance_page(self):
+        page = self.home_page
         section = 'saldos'
         selector = f'#_menu_{section}'
-        state = self.home.css(selector).xpath('@realhref').re_first(r'=(.*)')
+        state = page.css(selector).xpath('@realhref').re_first(r'=(.*)')
         url = make_url(section)
         headers = bpn_header.transferences
         response = self.session.post(url, headers=headers, params={
@@ -69,6 +70,21 @@ class Bpn(object):
         page = HtmlResponse(url, body=response.content)
         return page
 
+    @lazy_property
+    def home_page(self):
+        # entry to home
+        page = self.login_page
+        section = 'home'
+        selector = '#RedirectHomeForm [name="_STATE_"]'
+        state = page.css(selector).attrib['value']
+        url = make_url(section)
+        headers = bpn_header.home
+        response = self.session.post(url, headers=headers, params={
+            '_STATE_': state,
+        })
+        page = HtmlResponse(url, body=response.content)
+        return page
+
     def __login(self, username, password):
         page = self.login_page
         # second login, get LINKS cookie
@@ -87,16 +103,6 @@ class Bpn(object):
             'inclu': False,
             'recordarUsuario': False,
         })
-        # entry to home
-        section = 'home'
-        selector = '#RedirectHomeForm [name="_STATE_"]'
-        state = page.css(selector).attrib['value']
-        url = make_url(section)
-        headers = bpn_header.home
-        response = self.session.post(url, headers=headers, params={
-            '_STATE_': state,
-        })
-        self.home = HtmlResponse(url, body=response.content)
 
     def movements(self):
         selector = '#_menu_movimientosHistoricos'
