@@ -138,10 +138,12 @@ class Bpn(object):
         state = realhref_state(self.soup_home, selector)
         print(state)
 
+    @property
     def credin(self):
+        page = self.home_page
         section = 'consultaCredin'
         selector = f'#_menu_{section}'
-        state = self.home.css(selector).xpath('@realhref').re_first(r'=(.*)')
+        state = page.css(selector).xpath('@realhref').re_first(r'=(.*)')
         url = make_url(section)
         headers = bpn_header.transferences
         response = self.session.post(url, headers=headers, params={
