@@ -360,7 +360,7 @@ class Bpn(object):
             yield response.json()
 
     @lazy_property
-    def accounts_transferences_page(self):
+    def destination_accounts_page(self):
         page = self.home_page
         section = 'administrarCuentasTransferencia'
         selector = f'#_menu_{section}'
@@ -374,8 +374,8 @@ class Bpn(object):
         return page
 
     @property
-    def accounts_transferences(self):
-        page = self.accounts_transferences_page
+    def destination_accounts(self):
+        page = self.destination_accounts_page
         section = 'getCuentasDestinoTransferenciasSinClasificar'
         regex = make_regex_state(section)
         state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
