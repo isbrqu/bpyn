@@ -8,7 +8,7 @@ password = config.password
 bpn = Bpn(username, password)
 
 try:
-    pprint(bpn.total_balance)
+    pprint(bpn.accounts_transferences)
 finally:
     print(bpn.logout())
 

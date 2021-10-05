@@ -359,9 +359,34 @@ class Bpn(object):
             })
             yield response.json()
 
-    def accounts_transferences(self):
-        pass
+    @lazy_property
+    def accounts_transferences_page(self):
+        page = self.home_page
+        section = 'administrarCuentasTransferencia'
+        selector = f'#_menu_{section}'
+        state = page.css(selector).xpath('@realhref').re_first(r'=(.*)')
+        url = make_url(section)
+        headers = bpn_header.transferences
+        response = self.session.post(url, headers=headers, params={
+            '_STATE_': state,
+        })
+        page = HtmlResponse(url, body=response.content)
+        return page
 
+    @property
+    def accounts_transferences(self):
+        page = self.accounts_transferences_page
+        section = 'getCuentasDestinoTransferenciasSinClasificar'
+        regex = make_regex_state(section)
+        state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
+        url = make_url(section)
+        headers = bpn_header.transferences
+        response = self.session.post(url, headers=headers, params={
+            '_STATE_': state,
+        })
+        json = response.json()
+        return json
+        
     def logout(self):
         url = make_url('logout')
         header = bpn_header.logout
