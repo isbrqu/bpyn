@@ -43,20 +43,6 @@ class Bpn(object):
         self.__login(username, password)
 
     @lazy_property
-    def balance_page(self):
-        page = self.home_page
-        section = 'saldos'
-        selector = f'#_menu_{section}'
-        state = page.css(selector).xpath('@realhref').re_first(r'=(.*)')
-        url = make_url(section)
-        headers = bpn_header.transferences
-        response = self.session.post(url, headers=headers, params={
-            '_STATE_': state,
-        })
-        page = HtmlResponse(url, body=response.content)
-        return page
-
-    @lazy_property
     def login_page(self):
         # first login
         section = 'doLoginFirstStep'
@@ -66,21 +52,6 @@ class Bpn(object):
             'isInclu': False,
             'username': self.username,
             'pin': '',
-        })
-        page = HtmlResponse(url, body=response.content)
-        return page
-
-    @lazy_property
-    def home_page(self):
-        # entry to home
-        page = self.login_page
-        section = 'home'
-        selector = '#RedirectHomeForm [name="_STATE_"]'
-        state = page.css(selector).attrib['value']
-        url = make_url(section)
-        headers = bpn_header.home
-        response = self.session.post(url, headers=headers, params={
-            '_STATE_': state,
         })
         page = HtmlResponse(url, body=response.content)
         return page
@@ -103,6 +74,35 @@ class Bpn(object):
             'inclu': False,
             'recordarUsuario': False,
         })
+
+    @lazy_property
+    def home_page(self):
+        # entry to home
+        page = self.login_page
+        section = 'home'
+        selector = '#RedirectHomeForm [name="_STATE_"]'
+        state = page.css(selector).attrib['value']
+        url = make_url(section)
+        headers = bpn_header.home
+        response = self.session.post(url, headers=headers, params={
+            '_STATE_': state,
+        })
+        page = HtmlResponse(url, body=response.content)
+        return page
+
+    @lazy_property
+    def balance_page(self):
+        page = self.home_page
+        section = 'saldos'
+        selector = f'#_menu_{section}'
+        state = page.css(selector).xpath('@realhref').re_first(r'=(.*)')
+        url = make_url(section)
+        headers = bpn_header.transferences
+        response = self.session.post(url, headers=headers, params={
+            '_STATE_': state,
+        })
+        page = HtmlResponse(url, body=response.content)
+        return page
 
     def movements(self):
         selector = '#_menu_movimientosHistoricos'
