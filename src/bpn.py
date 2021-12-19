@@ -3,6 +3,7 @@ from pprint import pprint
 from scrapy.http import HtmlResponse
 from scrapy.selector import Selector
 from util import lazy_property, make_url, make_regex_state
+from page import Page
 import bpn_header
 import re
 import requests
@@ -14,6 +15,7 @@ class Bpn(object):
         self.password = password
         self.session = requests.Session()
         self.session.cookies.set('cookieTest', 'true')
+        self.page = Page(self.session)
         self.__login(username, password)
 
     @lazy_property
