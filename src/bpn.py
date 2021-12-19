@@ -49,9 +49,9 @@ class Bpn(object):
         url = make_url(section)
         headers = bpn_header.login
         response = self.session.post(url, headers=headers, params={
-            'isInclu': False,
+            # 'isInclu': False,
             'username': self.username,
-            'pin': '',
+            # 'pin': '23123',
         })
         page = HtmlResponse(url, body=response.content)
         return page
@@ -70,7 +70,7 @@ class Bpn(object):
             'password': password,
             'jsonRequest': True,
             'sfaInfo': '',
-            'pcCompartida': True,
+            'pcCompartida': False,
             'inclu': False,
             'recordarUsuario': False,
         })
@@ -138,8 +138,22 @@ class Bpn(object):
         state = realhref_state(self.soup_home, selector)
         print(state)
 
-    @property
-    def credin(self):
+    @lazy_property
+    def balance_page(self):
+        page = self.home_page
+        section = 'saldos'
+        selector = f'#_menu_{section}'
+        state = page.css(selector).xpath('@realhref').re_first(r'=(.*)')
+        url = make_url(section)
+        headers = bpn_header.transferences
+        response = self.session.post(url, headers=headers, params={
+            '_STATE_': state,
+        })
+        page = HtmlResponse(url, body=response.content)
+        return page
+
+    @lazy_property
+    def credin_page(self):
         page = self.home_page
         section = 'consultaCredin'
         selector = f'#_menu_{section}'
@@ -150,7 +164,11 @@ class Bpn(object):
             '_STATE_': state,
         })
         page = HtmlResponse(url, body=response.content)
-        # get values
+        return page
+
+    @property
+    def credin(self):
+        page = self.credin_page
         section = 'showConsultaCredin'
         selector = '#grilla'
         state = page.css(selector).xpath('@source').re_first(r'=(.*)')
