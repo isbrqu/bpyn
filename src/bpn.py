@@ -1,11 +1,11 @@
 from bs4 import BeautifulSoup as Soup
+from pprint import pprint
+from scrapy.http import HtmlResponse
+from scrapy.selector import Selector
+from util import lazy_property, make_url, make_regex_state
 import bpn_header
 import re
 import requests
-from scrapy.selector import Selector
-from pprint import pprint
-from scrapy.http import HtmlResponse
-from util import lazy_property, make_url, make_regex_state
 
 class Bpn(object):
 
