@@ -8,6 +8,8 @@ import bpn_header
 import re
 import requests
 
+XPATH_SCRIPT = '//script[contains(. , $text)]/text()'
+
 class Bpn(object):
 
     def __init__(self, username, password):
@@ -225,23 +227,9 @@ class Bpn(object):
         return json
 
     @lazy_property
-    def payments_page(self):
-        page = self.page.home
-        section = 'pagosRealizados'
-        selector = f'#_menu_{section}'
-        state = page.css(selector).xpath('@realhref').re_first(r'=(.*)')
-        url = make_url(section)
-        headers = bpn_header.transferences
-        response = self.session.post(url, headers=headers, params={
-            '_STATE_': state,
-        })
-        page = HtmlResponse(url, body=response.content)
-        return page
-
-    @lazy_property
     def entities(self):
         # get entities
-        page = self.payments_page
+        page = self.page.payments
         section =  'obtenerLinkPagosEnte'
         regex = make_regex_state(section)
         state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
@@ -256,7 +244,7 @@ class Bpn(object):
     @property
     def payments_made(self):
         # get values
-        page = self.payments_page
+        page = self.page.payments
         json = self.entities
         section = 'getPagosRealizados'
         selector = '#consultaPagosRealizadosForm [name="_STATE_"]'
