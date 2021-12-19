@@ -104,6 +104,39 @@ class Bpn(object):
         page = HtmlResponse(url, body=response.content)
         return page
 
+    @lazy_property
+    def credin_page(self):
+        page = self.home_page
+        section = 'consultaCredin'
+        selector = f'#_menu_{section}'
+        state = page.css(selector).xpath('@realhref').re_first(r'=(.*)')
+        url = make_url(section)
+        headers = bpn_header.transferences
+        response = self.session.post(url, headers=headers, params={
+            '_STATE_': state,
+        })
+        page = HtmlResponse(url, body=response.content)
+        return page
+
+    @property
+    def credin(self):
+        page = self.credin_page
+        section = 'showConsultaCredin'
+        selector = '#grilla'
+        state = page.css(selector).xpath('@source').re_first(r'=(.*)')
+        url = make_url(section)
+        headers = bpn_header.balance
+        response = self.session.post(url, headers=headers, params={
+            '_STATE_': state,
+            'fechaDesde': '01/01/1999',
+            'fechaHasta': '30/09/2021',
+            'sentidoCredin': 'Enviados',
+            'maxRows': 11,
+            'page': 2,
+        })
+        json = response.json()
+        return json
+
     def movements(self):
         selector = '#_menu_movimientosHistoricos'
         state = realhref_state(self.soup_home, selector)
@@ -137,53 +170,6 @@ class Bpn(object):
         selector = '#_menu_posicion31DicWS'
         state = realhref_state(self.soup_home, selector)
         print(state)
-
-    @lazy_property
-    def balance_page(self):
-        page = self.home_page
-        section = 'saldos'
-        selector = f'#_menu_{section}'
-        state = page.css(selector).xpath('@realhref').re_first(r'=(.*)')
-        url = make_url(section)
-        headers = bpn_header.transferences
-        response = self.session.post(url, headers=headers, params={
-            '_STATE_': state,
-        })
-        page = HtmlResponse(url, body=response.content)
-        return page
-
-    @lazy_property
-    def credin_page(self):
-        page = self.home_page
-        section = 'consultaCredin'
-        selector = f'#_menu_{section}'
-        state = page.css(selector).xpath('@realhref').re_first(r'=(.*)')
-        url = make_url(section)
-        headers = bpn_header.transferences
-        response = self.session.post(url, headers=headers, params={
-            '_STATE_': state,
-        })
-        page = HtmlResponse(url, body=response.content)
-        return page
-
-    @property
-    def credin(self):
-        page = self.credin_page
-        section = 'showConsultaCredin'
-        selector = '#grilla'
-        state = page.css(selector).xpath('@source').re_first(r'=(.*)')
-        url = make_url(section)
-        headers = bpn_header.balance
-        response = self.session.post(url, headers=headers, params={
-            '_STATE_': state,
-            'fechaDesde': '01/01/1999',
-            'fechaHasta': '30/09/2021',
-            'sentidoCredin': 'Enviados',
-            'maxRows': 11,
-            'page': 2,
-        })
-        json = response.json()
-        return json
 
     def cbu(self):
         selector = '#_menu_consultaCbu'
