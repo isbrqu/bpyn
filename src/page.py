@@ -12,21 +12,17 @@ class Page(object):
 
     @lazy_property
     def login(self):
-        # first login
         section = 'doLoginFirstStep'
         url = make_url(section)
         headers = bpn_header.login
         response = self.bpn.session.post(url, headers=headers, params={
-            # 'isInclu': False,
             'username': self.bpn.username,
-            # 'pin': '23123',
         })
         page = HtmlResponse(url, body=response.content)
         return page
 
     @lazy_property
     def home(self):
-        # entry to home
         page = self.login
         section = 'home'
         selector = '#RedirectHomeForm [name="_STATE_"]'
@@ -38,3 +34,18 @@ class Page(object):
         })
         page = HtmlResponse(url, body=response.content)
         return page
+
+    @lazy_property
+    def credin(self):
+        page = self.home
+        section = 'consultaCredin'
+        selector = f'#_menu_{section}'
+        state = page.css(selector).xpath('@realhref').re_first(r'=(.*)')
+        url = make_url(section)
+        headers = bpn_header.transferences
+        response = self.bpn.session.post(url, headers=headers, params={
+            '_STATE_': state,
+        })
+        page = HtmlResponse(url, body=response.content)
+        return page
+

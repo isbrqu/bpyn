@@ -20,7 +20,6 @@ class Bpn(object):
 
     def __login(self, username, password):
         page = self.page.login
-        # second login, get LINKS cookie
         section = 'doLogin'
         selector = '#LoginForm [name="_STATE_"]'
         state = page.css(selector).attrib['value']
@@ -51,23 +50,9 @@ class Bpn(object):
         page = HtmlResponse(url, body=response.content)
         return page
 
-    @lazy_property
-    def credin_page(self):
-        page = self.page.home
-        section = 'consultaCredin'
-        selector = f'#_menu_{section}'
-        state = page.css(selector).xpath('@realhref').re_first(r'=(.*)')
-        url = make_url(section)
-        headers = bpn_header.transferences
-        response = self.session.post(url, headers=headers, params={
-            '_STATE_': state,
-        })
-        page = HtmlResponse(url, body=response.content)
-        return page
-
     @property
     def credin(self):
-        page = self.credin_page
+        page = self.page.credin
         section = 'showConsultaCredin'
         selector = '#grilla'
         state = page.css(selector).xpath('@source').re_first(r'=(.*)')
