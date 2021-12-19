@@ -49,3 +49,17 @@ class Page(object):
         page = HtmlResponse(url, body=response.content)
         return page
 
+    @lazy_property
+    def balance(self):
+        page = self.home
+        section = 'saldos'
+        selector = f'#_menu_{section}'
+        state = page.css(selector).xpath('@realhref').re_first(r'=(.*)')
+        url = make_url(section)
+        headers = bpn_header.transferences
+        response = self.bpn.session.post(url, headers=headers, params={
+            '_STATE_': state,
+        })
+        page = HtmlResponse(url, body=response.content)
+        return page
+

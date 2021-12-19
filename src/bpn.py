@@ -36,20 +36,6 @@ class Bpn(object):
             'recordarUsuario': False,
         })
 
-    @lazy_property
-    def balance_page(self):
-        page = self.page.home
-        section = 'saldos'
-        selector = f'#_menu_{section}'
-        state = page.css(selector).xpath('@realhref').re_first(r'=(.*)')
-        url = make_url(section)
-        headers = bpn_header.transferences
-        response = self.session.post(url, headers=headers, params={
-            '_STATE_': state,
-        })
-        page = HtmlResponse(url, body=response.content)
-        return page
-
     @property
     def credin(self):
         page = self.page.credin
@@ -126,7 +112,7 @@ class Bpn(object):
     @lazy_property
     def accounts(self):
         # get accounts
-        page = self.balance_page
+        page = self.page.balance
         section = 'getCuentas'
         regex = make_regex_state(section)
         state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
@@ -140,7 +126,7 @@ class Bpn(object):
 
     @property
     def balances(self):
-        page = self.balance_page
+        page = self.page.balance
         json = self.accounts
         # get balances
         section = 'getSaldo'
@@ -161,7 +147,7 @@ class Bpn(object):
         # required to calculate the total balance
         [_ for _ in self.balances]
         # normal query
-        page = self.balance_page
+        page = self.page.balance
         section = 'getSaldosTotales'
         regex = make_regex_state(section)
         state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
