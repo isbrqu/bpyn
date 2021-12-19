@@ -38,23 +38,8 @@ class Bpn(object):
         })
 
     @lazy_property
-    def home_page(self):
-        # entry to home
-        page = self.page.login
-        section = 'home'
-        selector = '#RedirectHomeForm [name="_STATE_"]'
-        state = page.css(selector).attrib['value']
-        url = make_url(section)
-        headers = bpn_header.home
-        response = self.session.post(url, headers=headers, params={
-            '_STATE_': state,
-        })
-        page = HtmlResponse(url, body=response.content)
-        return page
-
-    @lazy_property
     def balance_page(self):
-        page = self.home_page
+        page = self.page.home
         section = 'saldos'
         selector = f'#_menu_{section}'
         state = page.css(selector).xpath('@realhref').re_first(r'=(.*)')
@@ -68,7 +53,7 @@ class Bpn(object):
 
     @lazy_property
     def credin_page(self):
-        page = self.home_page
+        page = self.page.home
         section = 'consultaCredin'
         selector = f'#_menu_{section}'
         state = page.css(selector).xpath('@realhref').re_first(r'=(.*)')
@@ -206,7 +191,7 @@ class Bpn(object):
     @property
     def phone_recharge(self):
         # first request
-        page = self.home_page
+        page = self.page.home
         section = 'consultaCargaValorTP'
         selector = f'#_menu_{section}'
         state = page.css(selector).xpath('@realhref').re_first(r'=(.*)')
@@ -240,7 +225,7 @@ class Bpn(object):
 
     @property
     def transferences(self):
-        page = self.home_page
+        page = self.page.home
         section = 'resumenTransferencias'
         selector = f'#_menu_{section}'
         state = page.css(selector).xpath('@realhref').re_first(r'=(.*)')
@@ -270,7 +255,7 @@ class Bpn(object):
 
     @lazy_property
     def payments_page(self):
-        page = self.home_page
+        page = self.page.home
         section = 'pagosRealizados'
         selector = f'#_menu_{section}'
         state = page.css(selector).xpath('@realhref').re_first(r'=(.*)')
@@ -327,7 +312,7 @@ class Bpn(object):
 
     @lazy_property
     def destination_accounts_page(self):
-        page = self.home_page
+        page = self.page.home
         section = 'administrarCuentasTransferencia'
         selector = f'#_menu_{section}'
         state = page.css(selector).xpath('@realhref').re_first(r'=(.*)')

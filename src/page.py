@@ -23,3 +23,18 @@ class Page(object):
         })
         page = HtmlResponse(url, body=response.content)
         return page
+
+    @lazy_property
+    def home(self):
+        # entry to home
+        page = self.login
+        section = 'home'
+        selector = '#RedirectHomeForm [name="_STATE_"]'
+        state = page.css(selector).attrib['value']
+        url = make_url(section)
+        headers = bpn_header.home
+        response = self.bpn.session.post(url, headers=headers, params={
+            '_STATE_': state,
+        })
+        page = HtmlResponse(url, body=response.content)
+        return page
