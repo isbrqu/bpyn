@@ -15,25 +15,11 @@ class Bpn(object):
         self.password = password
         self.session = requests.Session()
         self.session.cookies.set('cookieTest', 'true')
-        self.page = Page(self.session)
+        self.page = Page(self)
         self.__login(username, password)
 
-    @lazy_property
-    def login_page(self):
-        # first login
-        section = 'doLoginFirstStep'
-        url = make_url(section)
-        headers = bpn_header.login
-        response = self.session.post(url, headers=headers, params={
-            # 'isInclu': False,
-            'username': self.username,
-            # 'pin': '23123',
-        })
-        page = HtmlResponse(url, body=response.content)
-        return page
-
     def __login(self, username, password):
-        page = self.login_page
+        page = self.page.login
         # second login, get LINKS cookie
         section = 'doLogin'
         selector = '#LoginForm [name="_STATE_"]'
@@ -54,7 +40,7 @@ class Bpn(object):
     @lazy_property
     def home_page(self):
         # entry to home
-        page = self.login_page
+        page = self.page.login
         section = 'home'
         selector = '#RedirectHomeForm [name="_STATE_"]'
         state = page.css(selector).attrib['value']
