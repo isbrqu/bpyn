@@ -5,22 +5,7 @@ import requests
 from scrapy.selector import Selector
 from pprint import pprint
 from scrapy.http import HtmlResponse
-from util import lazy_property
-
-PARSER = 'html5lib'
-SCHEME = 'https'
-DOMAIN = 'hb.redlink.com.ar'
-URL_DIRECTORY = 'bpn'
-URL_BASE = f'{SCHEME}://{DOMAIN}/{URL_DIRECTORY}'
-
-XPATH_SCRIPT = '//script[contains(. , $text)]/text()'
-# REGEX_STATE = 
-
-def make_url(name):
-    return f'{URL_BASE}/{name}.htm'
-
-def make_regex_state(name):
-    return f'{name}\.htm.+=(.+)(:?"|\');'
+from util import lazy_property, make_url, make_regex_state
 
 class Bpn(object):
 
