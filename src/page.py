@@ -13,6 +13,7 @@ class Page(object):
         'payments': 'pagosRealizados',
         'destination_accounts': 'administrarCuentasTransferencia',
         'transfer_sumary': 'resumenTransferencias',
+        'phone_recharge': 'consultaCargaValorTP',
     }
 
     def __init__(self, bpn):

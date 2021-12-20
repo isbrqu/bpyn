@@ -163,18 +163,7 @@ class Bpn(object):
 
     @property
     def phone_recharge(self):
-        # first request
-        page = self.page.home
-        section = 'consultaCargaValorTP'
-        selector = f'#_menu_{section}'
-        state = page.css(selector).xpath('@realhref').re_first(r'=(.*)')
-        url = make_url(section)
-        headers = bpn_header.transferences
-        response = self.session.post(url, headers=headers, params={
-            '_STATE_': state,
-        })
-        page = HtmlResponse(url, body=response.content)
-        # get values
+        page = self.page.phone_recharge
         section = 'getRecargasConsultaCargaValor'
         selector = '#consultacargavalorForm [name="_STATE_"]'
         state = page.css(selector).attrib['value']
