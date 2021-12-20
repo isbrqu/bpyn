@@ -12,6 +12,7 @@ class Page(object):
         'balance': 'saldos',
         'payments': 'pagosRealizados',
         'destination_accounts': 'administrarCuentasTransferencia',
+        'transfer_sumary': 'resumenTransferencias',
     }
 
     def __init__(self, bpn):

@@ -198,17 +198,7 @@ class Bpn(object):
 
     @property
     def transferences(self):
-        page = self.page.home
-        section = 'resumenTransferencias'
-        selector = f'#_menu_{section}'
-        state = page.css(selector).xpath('@realhref').re_first(r'=(.*)')
-        url = make_url(section)
-        headers = bpn_header.transferences
-        response = self.session.post(url, headers=headers, params={
-            '_STATE_': state,
-        })
-        page = HtmlResponse(url, body=response.content)
-        # get values
+        page = self.page.transfer_sumary
         section =  'transferenciasByFilter'
         regex = make_regex_state(section)
         state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
