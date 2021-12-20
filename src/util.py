@@ -15,6 +15,12 @@ def make_url(name):
 def make_regex_state(name):
     return f'{name}\.htm.+=(.+)(:?"|\');'
 
+# def homepage(fn, section):
+#     def wrapper(self):
+#         page = self.home
+#         return fn(self, page)
+#     return wrapper
+
 def lazy_property(fn):
     '''Decorator that makes a property lazy-evaluated.
     '''
