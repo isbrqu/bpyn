@@ -21,6 +21,13 @@ class Page(object):
         page = HtmlResponse(url, body=response.content)
         return page
 
+    def __post_state(self, url, headers, state):
+        response = self.bpn.session.post(url, headers=headers, params={
+            '_STATE_': state,
+        })
+        page = HtmlResponse(url, body=response.content)
+        return page
+
     @lazy_property
     def home(self):
         page = self.login
@@ -29,11 +36,7 @@ class Page(object):
         state = page.css(selector).attrib['value']
         url = make_url(section)
         headers = bpn_header.home
-        response = self.bpn.session.post(url, headers=headers, params={
-            '_STATE_': state,
-        })
-        page = HtmlResponse(url, body=response.content)
-        return page
+        return self.__post_state(url, headers, state)
 
     def __item_menu_home(self, section):
         page = self.home
@@ -41,11 +44,7 @@ class Page(object):
         state = page.css(selector).xpath('@realhref').re_first(r'=(.*)')
         url = make_url(section)
         headers = bpn_header.transferences
-        response = self.bpn.session.post(url, headers=headers, params={
-            '_STATE_': state,
-        })
-        page = HtmlResponse(url, body=response.content)
-        return page
+        return self.__post_state(url, headers, state)
 
     @lazy_property
     def credin(self):
@@ -61,3 +60,4 @@ class Page(object):
     def payments(self):
         section = 'pagosRealizados'
         return self.__item_menu_home(section)
+
