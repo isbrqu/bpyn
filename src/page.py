@@ -7,8 +7,24 @@ import requests
 
 class Page(object):
 
+    menu_item = {
+        'credin': 'consultaCredin',
+        'balance': 'saldos',
+        'payments': 'pagosRealizados'
+    }
+
     def __init__(self, bpn):
         self.bpn = bpn
+
+    # usado únicamente para las páginas de home
+    def __getattr__(self, attr):
+        section = Page.menu_item.get(attr, None)
+        if section:
+            page = self.__item_menu_home(section)
+            setattr(self, attr, page)
+            return page
+        cname = self.__class__.__name__
+        raise AttributeError(f"'{cname}' object has no attribute '{attr}'")
 
     @lazy_property
     def login(self):
@@ -45,19 +61,4 @@ class Page(object):
         url = make_url(section)
         headers = bpn_header.transferences
         return self.__post_state(url, headers, state)
-
-    @lazy_property
-    def credin(self):
-        section = 'consultaCredin'
-        return self.__item_menu_home(section)
-
-    @lazy_property
-    def balance(self):
-        section = 'saldos'
-        return self.__item_menu_home(section)
-
-    @lazy_property
-    def payments(self):
-        section = 'pagosRealizados'
-        return self.__item_menu_home(section)
 
