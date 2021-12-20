@@ -10,7 +10,8 @@ class Page(object):
     menu_item = {
         'credin': 'consultaCredin',
         'balance': 'saldos',
-        'payments': 'pagosRealizados'
+        'payments': 'pagosRealizados',
+        'destination_accounts': 'administrarCuentasTransferencia',
     }
 
     def __init__(self, bpn):

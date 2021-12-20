@@ -269,23 +269,9 @@ class Bpn(object):
             })
             yield response.json()
 
-    @lazy_property
-    def destination_accounts_page(self):
-        page = self.page.home
-        section = 'administrarCuentasTransferencia'
-        selector = f'#_menu_{section}'
-        state = page.css(selector).xpath('@realhref').re_first(r'=(.*)')
-        url = make_url(section)
-        headers = bpn_header.transferences
-        response = self.session.post(url, headers=headers, params={
-            '_STATE_': state,
-        })
-        page = HtmlResponse(url, body=response.content)
-        return page
-
     @property
     def destination_accounts(self):
-        page = self.destination_accounts_page
+        page = self.page.destination_accounts
         section = 'getCuentasDestinoTransferenciasSinClasificar'
         regex = make_regex_state(section)
         state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
