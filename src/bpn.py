@@ -57,60 +57,6 @@ class Bpn(object):
         json = response.json()
         return json
 
-    def movements(self):
-        selector = '#_menu_movimientosHistoricos'
-        state = realhref_state(self.soup_home, selector)
-        print(state)
-        url = make_url('movimientosHistoricos')
-        params = {'_STATE_': state}
-        header = bpn_header.movements
-        response = self.session.post(url, params=params, headers=header)
-        regex = r'/bpn/getCuentas\.htm\?_STATE_=(.+)(?:"|\')'
-        pattern = re.compile(regex)
-        state = pattern.search(response.text).group(1)
-        print('state:', state)
-        # write_html('foo', response)
-
-    def last_movements(self):
-        selector = '#_menu_ultimosMovimientos'
-        state = realhref_state(self.soup_home, selector)
-        print(state)
-
-    def movements_of_the_day(self):
-        selector = '#_menu_movimientosDia'
-        state = realhref_state(self.soup_home, selector)
-        print(state)
-
-    def position(self):
-        selector = '#_menu_posicionConsolidada'
-        state = realhref_state(self.soup_home, selector)
-        print(state)
-
-    def tendences(self):
-        selector = '#_menu_posicion31DicWS'
-        state = realhref_state(self.soup_home, selector)
-        print(state)
-
-    def cbu(self):
-        selector = '#_menu_consultaCbu'
-        state = realhref_state(self.soup_home, selector)
-        print(state)
-
-    def buys(self):
-        selector = '#_menu_consultasComprasComercios'
-        state = realhref_state(self.soup_home, selector)
-        print(state)
-
-    def creditcards(self):
-        selector = '#_menu_consultaTarjetasCredito'
-        state = realhref_state(self.soup_home, selector)
-        print(state)
-
-    def documents(self):
-        selector = '#_menu_gestionDocumentosElectronicosConsulta'
-        state = realhref_state(self.soup_home, selector)
-        print(state)
-
     @lazy_property
     def accounts(self):
         # get accounts
@@ -268,4 +214,31 @@ class Bpn(object):
         response = self.session.get(url, headers=header)
         json = response.json()
         return json
+
+    def movements(self):
+        pass
+
+    def last_movements(self):
+        pass
+
+    def movements_of_the_day(self):
+        pass
+
+    def position(self):
+        pass
+
+    def tendences(self):
+        pass
+
+    def cbu(self):
+        pass
+
+    def buys(self):
+        pass
+
+    def creditcards(self):
+        pass
+
+    def documents(self):
+        pass
 

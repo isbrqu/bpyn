@@ -14,6 +14,15 @@ class Page(object):
         'destination_accounts': 'administrarCuentasTransferencia',
         'transfer_sumary': 'resumenTransferencias',
         'phone_recharge': 'consultaCargaValorTP',
+        'position': 'posicionConsolidada',
+        'last_movements': 'ultimosMovimientos',
+        'movements_of_the_day': 'movimientosDia',
+        'tendences': 'posicion31DicWS',
+        'cbu': 'consultaCbu',
+        'buys': 'consultasComprasComercios',
+        'creditcards': 'consultaTarjetasCredito',
+        'documents': 'gestionDocumentosElectronicosConsulta',
+        'movements': 'movimientosHistoricos',
     }
 
     def __init__(self, bpn):
