@@ -38,6 +38,55 @@ class Bpn(object):
             'recordarUsuario': False,
         })
 
+    def logout(self):
+        url = make_url('logout')
+        header = bpn_header.logout
+        response = self.session.get(url, headers=header)
+        json = response.json()
+        return json
+
+    @lazy_property
+    def accounts(self):
+        page = self.page.balance
+        section = 'getCuentas'
+        regex = make_regex_state(section)
+        state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
+        url = make_url(section)
+        headers = bpn_header.balance
+        response = self.session.post(url, headers=headers, params={
+            '_STATE_': state,
+        })
+        json = response.json()
+        return json
+
+    @lazy_property
+    def entities(self):
+        page = self.page.payments
+        section =  'obtenerLinkPagosEnte'
+        headers = bpn_header.balance
+        regex = make_regex_state(section)
+        state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
+        url = make_url(section)
+        response = self.session.post(url, headers=headers, params={
+            '_STATE_': state,
+        })
+        json = response.json()
+        return json
+
+    @property
+    def destination_accounts(self):
+        page = self.page.destination_accounts
+        section = 'getCuentasDestinoTransferenciasSinClasificar'
+        regex = make_regex_state(section)
+        state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
+        url = make_url(section)
+        headers = bpn_header.transferences
+        response = self.session.post(url, headers=headers, params={
+            '_STATE_': state,
+        })
+        json = response.json()
+        return json
+        
     @property
     def credin(self):
         page = self.page.credin
@@ -57,52 +106,22 @@ class Bpn(object):
         json = response.json()
         return json
 
-    @lazy_property
-    def accounts(self):
-        # get accounts
-        page = self.page.balance
-        section = 'getCuentas'
+    @property
+    def transferences(self):
+        page = self.page.transfer_sumary
+        section =  'transferenciasByFilter'
         regex = make_regex_state(section)
         state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
         url = make_url(section)
         headers = bpn_header.balance
         response = self.session.post(url, headers=headers, params={
             '_STATE_': state,
-        })
-        json = response.json()
-        return json
-
-    @property
-    def balances(self):
-        page = self.page.balance
-        json = self.accounts
-        # get balances
-        section = 'getSaldo'
-        regex = make_regex_state(section)
-        state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
-        url = make_url(section)
-        headers = bpn_header.balance
-        for account in json['response']['data']:
-            response = self.session.post(url, headers=headers, params={
-                '_STATE_': state,
-                'numero': account['numero'],
-                'tipoTandem': account['tipoTandem']
-            })
-            yield response.json()
-
-    @property
-    def total_balance(self):
-        # required to calculate the total balance
-        [_ for _ in self.balances]
-        # normal query
-        page = self.page.balance
-        section = 'getSaldosTotales'
-        regex = make_regex_state(section)
-        state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
-        url = make_url(section)
-        headers = bpn_header.balance
-        response = self.session.post(url, headers=headers, params={
-            '_STATE_': state,
+            'fechaDesde': '01/01/1999',
+            'fechaHasta': '30/12/2021',
+            'linesPerPage': 100,
+            'pageNumber': 1,
+            'orderingField': 'fechaMovimiento',
+            'sortOrder': 'desc',
         })
         json = response.json()
         return json
@@ -131,44 +150,27 @@ class Bpn(object):
         json = response.json()
         return json
 
-    @property
-    def transferences(self):
-        page = self.page.transfer_sumary
-        section =  'transferenciasByFilter'
-        regex = make_regex_state(section)
-        state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
-        url = make_url(section)
-        headers = bpn_header.balance
-        response = self.session.post(url, headers=headers, params={
-            '_STATE_': state,
-            'fechaDesde': '01/01/1999',
-            'fechaHasta': '30/12/2021',
-            'linesPerPage': 100,
-            'pageNumber': 1,
-            'orderingField': 'fechaMovimiento',
-            'sortOrder': 'desc',
-        })
-        json = response.json()
-        return json
+    # métodos dependientes de los anteriores
 
-    @lazy_property
-    def entities(self):
-        # get entities
-        page = self.page.payments
-        section =  'obtenerLinkPagosEnte'
+    @property
+    def balances(self):
+        page = self.page.balance
+        json = self.accounts
+        section = 'getSaldo'
         regex = make_regex_state(section)
         state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
         url = make_url(section)
         headers = bpn_header.balance
-        response = self.session.post(url, headers=headers, params={
-            '_STATE_': state,
-        })
-        json = response.json()
-        return json
+        for account in json['response']['data']:
+            response = self.session.post(url, headers=headers, params={
+                '_STATE_': state,
+                'numero': account['numero'],
+                'tipoTandem': account['tipoTandem']
+            })
+            yield response.json()
 
     @property
     def payments_made(self):
-        # get values
         page = self.page.payments
         json = self.entities
         section = 'getPagosRealizados'
@@ -195,23 +197,18 @@ class Bpn(object):
             yield response.json()
 
     @property
-    def destination_accounts(self):
-        page = self.page.destination_accounts
-        section = 'getCuentasDestinoTransferenciasSinClasificar'
+    def total_balance(self):
+        # required to calculate the total balance
+        [_ for _ in self.balances]
+        page = self.page.balance
+        section = 'getSaldosTotales'
         regex = make_regex_state(section)
         state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
         url = make_url(section)
-        headers = bpn_header.transferences
+        headers = bpn_header.balance
         response = self.session.post(url, headers=headers, params={
             '_STATE_': state,
         })
-        json = response.json()
-        return json
-        
-    def logout(self):
-        url = make_url('logout')
-        header = bpn_header.logout
-        response = self.session.get(url, headers=header)
         json = response.json()
         return json
 
