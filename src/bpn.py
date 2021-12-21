@@ -74,7 +74,43 @@ class Bpn(object):
         return json
 
     @property
-    def destination_accounts(self):
+    def own_transfer_accounts(self):
+        page = self.page.destination_accounts
+        section = 'getCuentasDestinoTransferenciasPropias'
+        regex = make_regex_state(section)
+        state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
+        url = make_url(section)
+        headers = bpn_header.transferences
+        response = self.session.post(url, headers=headers, params={
+            '_STATE_': state,
+            'linesPerPage': 10,
+            'pageNumber': 1,
+            'orderingField': 'banco',
+            'sortOrder': 'desc',
+        })
+        json = response.json()
+        return json
+        
+    @property
+    def third_party_transfer_accounts(self):
+        page = self.page.destination_accounts
+        section = 'getCuentasDestinoTransferenciasTerceros'
+        regex = make_regex_state(section)
+        state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
+        url = make_url(section)
+        headers = bpn_header.transferences
+        response = self.session.post(url, headers=headers, params={
+            '_STATE_': state,
+            'linesPerPage': 10,
+            'pageNumber': 1,
+            'orderingField': 'banco',
+            'sortOrder': 'desc',
+        })
+        json = response.json()
+        return json
+        
+    @property
+    def unknown_transfer_accounts(self):
         page = self.page.destination_accounts
         section = 'getCuentasDestinoTransferenciasSinClasificar'
         regex = make_regex_state(section)
@@ -153,6 +189,24 @@ class Bpn(object):
     # métodos dependientes de los anteriores
 
     @property
+    def total_balance(self):
+        # required to calculate the total balance
+        [_ for _ in self.balances]
+        page = self.page.balance
+        section = 'getSaldosTotales'
+        regex = make_regex_state(section)
+        state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
+        url = make_url(section)
+        headers = bpn_header.balance
+        response = self.session.post(url, headers=headers, params={
+            '_STATE_': state,
+        })
+        json = response.json()
+        return json
+
+    # métodos dependientes de los anteriores y con un generador como retorno
+
+    @property
     def balances(self):
         page = self.page.balance
         json = self.accounts
@@ -195,47 +249,4 @@ class Bpn(object):
                 # 'vencHasta': '',
             })
             yield response.json()
-
-    @property
-    def total_balance(self):
-        # required to calculate the total balance
-        [_ for _ in self.balances]
-        page = self.page.balance
-        section = 'getSaldosTotales'
-        regex = make_regex_state(section)
-        state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
-        url = make_url(section)
-        headers = bpn_header.balance
-        response = self.session.post(url, headers=headers, params={
-            '_STATE_': state,
-        })
-        json = response.json()
-        return json
-
-    def movements(self):
-        pass
-
-    def last_movements(self):
-        pass
-
-    def movements_of_the_day(self):
-        pass
-
-    def position(self):
-        pass
-
-    def tendences(self):
-        pass
-
-    def cbu(self):
-        pass
-
-    def buys(self):
-        pass
-
-    def creditcards(self):
-        pass
-
-    def documents(self):
-        pass
 
