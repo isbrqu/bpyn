@@ -124,26 +124,6 @@ class Bpn(object):
         return json
         
     @property
-    def credin(self):
-        page = self.page.credin
-        section = 'showConsultaCredin'
-        selector = '#grilla'
-        state = page.css(selector).xpath('@source').re_first(r'=(.*)')
-        url = make_url(section)
-        headers = bpn_header.transferences
-        response = self.session.post(url, headers=headers, params={
-            '_STATE_': state,
-            'fechaDesde': '01/01/1999',
-            'fechaHasta': '30/09/2021',
-            'sentidoCredin': 'Enviados',
-            'maxRows': 11,
-            'page': 2,
-        })
-        print(response.text)
-        json = response.json()
-        return json
-
-    @property
     def transferences(self):
         page = self.page.transfer_sumary
         section =  'transferenciasByFilter'
@@ -184,6 +164,26 @@ class Bpn(object):
             'linesPerPage': 5,
             'codigoRubro': 'TP',
         })
+        json = response.json()
+        return json
+
+    @property
+    def credin(self):
+        page = self.page.credin
+        section = 'showConsultaCredin'
+        selector = '#grilla'
+        state = page.css(selector).xpath('@source').re_first(r'=(.*)')
+        url = make_url(section)
+        headers = bpn_header.transferences
+        response = self.session.post(url, headers=headers, params={
+            '_STATE_': state,
+            'fechaDesde': '01/01/1999',
+            'fechaHasta': '30/09/2021',
+            'sentidoCredin': 'Enviados',
+            'maxRows': 11,
+            'page': 2,
+        })
+        print(response.text)
         json = response.json()
         return json
 
