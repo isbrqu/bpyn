@@ -52,7 +52,7 @@ class Bpn(object):
         regex = make_regex_state(section)
         state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
         url = make_url(section)
-        headers = bpn_header.balance
+        headers = bpn_header.transferences
         response = self.session.post(url, headers=headers, params={
             '_STATE_': state,
         })
@@ -63,7 +63,7 @@ class Bpn(object):
     def entities(self):
         page = self.page.payments
         section =  'obtenerLinkPagosEnte'
-        headers = bpn_header.balance
+        headers = bpn_header.transferences
         regex = make_regex_state(section)
         state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
         url = make_url(section)
@@ -130,7 +130,7 @@ class Bpn(object):
         selector = '#grilla'
         state = page.css(selector).xpath('@source').re_first(r'=(.*)')
         url = make_url(section)
-        headers = bpn_header.balance
+        headers = bpn_header.transferences
         response = self.session.post(url, headers=headers, params={
             '_STATE_': state,
             'fechaDesde': '01/01/1999',
@@ -139,6 +139,7 @@ class Bpn(object):
             'maxRows': 11,
             'page': 2,
         })
+        print(response.text)
         json = response.json()
         return json
 
@@ -149,7 +150,7 @@ class Bpn(object):
         regex = make_regex_state(section)
         state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
         url = make_url(section)
-        headers = bpn_header.balance
+        headers = bpn_header.transferences
         response = self.session.post(url, headers=headers, params={
             '_STATE_': state,
             'fechaDesde': '01/01/1999',
@@ -169,7 +170,7 @@ class Bpn(object):
         selector = '#consultacargavalorForm [name="_STATE_"]'
         state = page.css(selector).attrib['value']
         url = make_url(section)
-        headers = bpn_header.balance
+        headers = bpn_header.transferences
         response = self.session.post(url, headers=headers, params={
             '_STATE_': state,
             'codigoEmpresa': '',
