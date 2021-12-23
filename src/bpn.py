@@ -125,7 +125,7 @@ class Bpn(object):
                 break
         return results
 
-    @property
+    @lazy_property
     def own_transfer_accounts(self):
         page = self.page.destination_accounts
         section = 'getCuentasDestinoTransferenciasPropias'
@@ -133,16 +133,25 @@ class Bpn(object):
         state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
         url = make_url(section)
         headers = bpn_header.transferences
-        response = self.session.post(url, headers=headers, params={
-            '_STATE_': state,
-            'linesPerPage': 10,
-            'pageNumber': 1,
-            'orderingField': 'banco',
-            'sortOrder': 'desc',
-        })
-        json = response.json()
-        return json
-        
+        results = []
+        i = 0
+        while True:
+            i += 1
+            response = self.session.post(url, headers=headers, params={
+                '_STATE_': state,
+                'linesPerPage': 10,
+                'pageNumber': i,
+                'orderingField': 'banco',
+                'sortOrder': 'desc',
+            })
+            json = response.json()
+            try:
+                json = json['response']['data']
+                results.extend(json)
+            except KeyError:
+                break
+        return results
+
     @property
     def third_party_transfer_accounts(self):
         page = self.page.destination_accounts
