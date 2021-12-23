@@ -219,6 +219,20 @@ class Bpn(object):
         json = response.json()
         return json
 
+    @lazy_property
+    def balance_in_consolidated_position(self):
+        page = self.page.position
+        section =  'getSaldoPosCons'
+        headers = bpn_header.transferences
+        regex = make_regex_state(section)
+        state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
+        url = make_url(section)
+        response = self.session.post(url, headers=headers, params={
+            '_STATE_': state,
+        })
+        json = response.json()
+        return json
+
     # métodos dependientes de los anteriores y con un generador como retorno
 
     @property
