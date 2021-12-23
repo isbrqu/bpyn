@@ -118,10 +118,11 @@ class Bpn(object):
                 'pageNumber': i,
             })
             json = response.json()
-            if 'response' in json and 'code' in json['response']:
+            try:
+                json = json['response']['data'][0]
+                results.extend(json['consultaPrestamos']['prestamos'])
+            except KeyError:
                 break
-            json = json['response']['data'][0]
-            results.extend(json['consultaPrestamos']['prestamos'])
         return results
 
     @property
