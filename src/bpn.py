@@ -119,8 +119,8 @@ class Bpn(object):
             })
             json = response.json()
             try:
-                json = json['response']['data'][0]
-                results.extend(json['consultaPrestamos']['prestamos'])
+                json = json['response']['data']
+                results.extend(json[0]['consultaPrestamos']['prestamos'])
             except KeyError:
                 break
         return results
