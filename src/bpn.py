@@ -101,6 +101,29 @@ class Bpn(object):
         json = response.json()
         return json
         
+    @lazy_property
+    def loans(self):
+        page = self.page.position
+        section =  'getPrestamos'
+        headers = bpn_header.transferences
+        regex = make_regex_state(section)
+        state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
+        url = make_url(section)
+        results = []
+        i = 0
+        while True:
+            i += 1
+            response = self.session.post(url, headers=headers, params={
+                '_STATE_': state,
+                'pageNumber': i,
+            })
+            json = response.json()
+            if 'response' in json and 'code' in json['response']:
+                break
+            json = json['response']['data'][0]
+            results.extend(json['consultaPrestamos']['prestamos'])
+        return results
+
     @property
     def own_transfer_accounts(self):
         page = self.page.destination_accounts
