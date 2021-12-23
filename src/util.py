@@ -1,4 +1,6 @@
 from functools import wraps
+import requests
+from bpn_header import transferences as HEADERS
 
 PARSER = 'html5lib'
 SCHEME = 'https'
@@ -31,3 +33,27 @@ def lazy_property(fn):
             setattr(self, attr_name, fn(self))
         return getattr(self, attr_name)
     return _lazy_property
+
+# https://stackoverflow.com/a/60309236
+class Request(object):
+
+    def __init__(self, method='post', section, page):
+        self.method = method.upper()
+        self.section = section
+        self.headers = HEADERS
+        self.page = page
+
+    def __call__(self, function):
+        def wrapper(obj, *args, **kwargs):
+            params = function(*args, **kwargs)
+            args = {}
+            args['url'] = make_url(section)
+            args['method'] = self.method,
+            args['headers'] = self.headers
+            if params:
+                args['params'] = params
+            regex = make_regex_state(section)
+            state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
+            params['_STATE_'] = state
+            return requests.request(**args)
+        return wrapper
