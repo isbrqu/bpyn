@@ -50,18 +50,15 @@ class Bpn(object):
         return params
 
     @lazy_property
-    def accounts_for_pc(self):
-        page = self.page.position
-        section =  'getCuentasForPC'
-        headers = bpn_header.transferences
-        regex = make_regex_state(section)
-        state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
-        url = make_url(section)
-        response = self.session.post(url, headers=headers, params={
-            '_STATE_': state,
-        })
-        json = response.json()
-        return json
+    @json
+    @PostRequest(path='getCuentasForPC')
+    def accounts_for_pc(self, path):
+        page = self.page('posicionConsolidada')
+        regex = make_regex_state(path)
+        state = page.xpath(XPATH_SCRIPT, text=path).re_first(regex)
+        params = {}
+        params['_STATE_'] = state
+        return params
 
     @lazy_property
     def entities(self):
