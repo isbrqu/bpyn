@@ -1,9 +1,13 @@
 from bpn_header import transferences as HEADERS
+from util import make_regex_state
+
 
 SCHEME = 'https'
 DOMAIN = 'hb.redlink.com.ar'
 URL_DIRECTORY = 'bpn'
 URL_BASE = f'{SCHEME}://{DOMAIN}/{URL_DIRECTORY}'
+
+XPATH_SCRIPT = '//script[contains(. , $text)]/text()'
 
 # https://stackoverflow.com/a/60309236
 class Request(object):
@@ -41,3 +45,14 @@ def json(function):
         return json
     return wrapper
 
+def state_in_script(namepage):
+    def closure(function):
+        def wrapper(obj, path):
+            page = obj.page(namepage)
+            regex = make_regex_state(path)
+            state = page.xpath(XPATH_SCRIPT, text=path).re_first(regex)
+            params = function(obj, path)
+            params['_STATE_'] = state
+            return params
+        return wrapper
+    return closure

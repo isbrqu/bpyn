@@ -2,7 +2,7 @@ from bs4 import BeautifulSoup as Soup
 from scrapy.http import HtmlResponse
 from scrapy.selector import Selector
 from util import lazy_property, make_url, make_regex_state
-from decorator import PostRequest, GetRequest, json
+from decorator import PostRequest, GetRequest, json, state_in_script
 import bpn_header
 import requests
 
@@ -41,35 +41,23 @@ class Bpn(object):
     @lazy_property
     @json
     @PostRequest(path='getCuentas')
+    @state_in_script(namepage='saldos')
     def accounts(self, path):
-        page = self.page('saldos')
-        regex = make_regex_state(path)
-        state = page.xpath(XPATH_SCRIPT, text=path).re_first(regex)
-        params = {}
-        params['_STATE_'] = state
-        return params
+        return dict()
 
     @lazy_property
     @json
     @PostRequest(path='getCuentasForPC')
+    @state_in_script(namepage='posicionConsolidada')
     def accounts_for_pc(self, path):
-        page = self.page('posicionConsolidada')
-        regex = make_regex_state(path)
-        state = page.xpath(XPATH_SCRIPT, text=path).re_first(regex)
-        params = {}
-        params['_STATE_'] = state
-        return params
+        return dict()
 
     @lazy_property
     @json
     @PostRequest(path='obtenerLinkPagosEnte')
+    @state_in_script(namepage='pagosRealizados')
     def entities(self, path):
-        page = self.page('pagosRealizados')
-        regex = make_regex_state(path)
-        state = page.xpath(XPATH_SCRIPT, text=path).re_first(regex)
-        params = {}
-        params['_STATE_'] = state
-        return params
+        return dict()
 
     @property
     def unknown_transfer_accounts(self):
