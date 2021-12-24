@@ -59,20 +59,13 @@ class Bpn(object):
     def entities(self, path):
         return dict()
 
-    @property
-    def unknown_transfer_accounts(self):
-        page = self.page.destination_accounts
-        section = 'getCuentasDestinoTransferenciasSinClasificar'
-        regex = make_regex_state(section)
-        state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
-        url = make_url(section)
-        headers = bpn_header.transferences
-        response = self.session.post(url, headers=headers, params={
-            '_STATE_': state,
-        })
-        json = response.json()
-        return json
-        
+    @lazy_property
+    @json
+    @PostRequest(path='getCuentasDestinoTransferenciasSinClasificar')
+    @state_in_script(namepage='administrarCuentasTransferencia')
+    def unknown_transfer_accounts(self, path):
+        return dict()
+
     @lazy_property
     def loans(self):
         page = self.page.position
