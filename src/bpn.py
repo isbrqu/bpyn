@@ -61,18 +61,15 @@ class Bpn(object):
         return params
 
     @lazy_property
-    def entities(self):
-        page = self.page.payments
-        section =  'obtenerLinkPagosEnte'
-        headers = bpn_header.transferences
-        regex = make_regex_state(section)
-        state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
-        url = make_url(section)
-        response = self.session.post(url, headers=headers, params={
-            '_STATE_': state,
-        })
-        json = response.json()
-        return json
+    @json
+    @PostRequest(path='obtenerLinkPagosEnte')
+    def entities(self, path):
+        page = self.page('pagosRealizados')
+        regex = make_regex_state(path)
+        state = page.xpath(XPATH_SCRIPT, text=path).re_first(regex)
+        params = {}
+        params['_STATE_'] = state
+        return params
 
     @property
     def unknown_transfer_accounts(self):
