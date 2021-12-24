@@ -1,11 +1,9 @@
 from bs4 import BeautifulSoup as Soup
-from pprint import pprint
 from scrapy.http import HtmlResponse
 from scrapy.selector import Selector
 from util import lazy_property, make_url, make_regex_state
-from page import Page
+from decorator import PostRequest, GetRequest
 import bpn_header
-import re
 import requests
 
 XPATH_SCRIPT = '//script[contains(. , $text)]/text()'
@@ -17,37 +15,32 @@ class Bpn(object):
         self.password = password
         self.session = requests.Session()
         self.session.cookies.set('cookieTest', 'true')
-        self.page = Page(self)
-        self.__login(username, password)
+        self.pages = {}
+        response = self.__login()
 
-    def __login(self, username, password):
-        page = self.page.login
-        section = 'doLogin'
+    @PostRequest(path='doLogin', headers=bpn_header.login)
+    def __login(self):
+        page = self.page('login')
         selector = '#LoginForm [name="_STATE_"]'
         state = page.css(selector).attrib['value']
-        url = make_url(section)
-        headers = bpn_header.login
-        response = self.session.post(url, headers=headers, params={
-            '_STATE_': state,
-            'username': username,
-            'password': password,
-            'jsonRequest': True,
-            'sfaInfo': '',
-            'pcCompartida': False,
-            'inclu': False,
-            'recordarUsuario': False,
-        })
+        params = {}
+        params['_STATE_'] = state
+        params['username'] = self.username
+        params['password'] = self.password
+        params['jsonRequest'] = True
+        params['sfaInfo'] = ''
+        params['pcCompartida'] = False
+        params['inclu'] = False
+        params['recordarUsuario'] = False
+        return params
 
+    @GetRequest(path='logout', headers=bpn_header.logout)
     def logout(self):
-        url = make_url('logout')
-        header = bpn_header.logout
-        response = self.session.get(url, headers=header)
-        json = response.json()
-        return json
+        return dict()
 
     @lazy_property
     def accounts(self):
-        page = self.page.balance
+        page = self.page('saldos')
         section = 'getCuentas'
         regex = make_regex_state(section)
         state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
@@ -230,7 +223,6 @@ class Bpn(object):
             'maxRows': 11,
             'page': 2,
         })
-        print(response.text)
         json = response.json()
         return json
 
@@ -311,4 +303,44 @@ class Bpn(object):
                 # 'vencHasta': '',
             })
             yield response.json()
+
+    def page(self, name):
+        if name in self.pages:
+            page = self.pages[name]
+            return page
+        if name == 'login':
+            response = self.login_page()
+        elif name == 'home':
+            response = self.home_page()
+        else:
+            response = self.subpage_from_home_page(name)
+        page = HtmlResponse(response.url, body=response.content)
+        self.pages[name] = page
+        return page
+
+    @PostRequest(path='doLoginFirstStep', headers=bpn_header.login)
+    def login_page(self):
+        params = {}
+        params['username'] = self.username
+        return params
+
+    @PostRequest(path='home', headers=bpn_header.home)
+    def home_page(self):
+        page = self.page('login')
+        selector = '#RedirectHomeForm [name="_STATE_"]'
+        state = page.css(selector).attrib['value']
+        params = {}
+        params['_STATE_'] = state
+        return params
+
+    def subpage_from_home_page(self, section):
+        @PostRequest(path=section)
+        def function(self):
+            page = self.page('home')
+            selector = f'#_menu_{section}'
+            state = page.css(selector).xpath('@realhref').re_first(r'=(.*)')
+            params = {}
+            params['_STATE_'] = state
+            return params
+        return function(self)
 
