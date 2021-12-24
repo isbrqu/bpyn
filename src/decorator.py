@@ -19,7 +19,7 @@ class Request(object):
             args['url'] = f'{URL_BASE}/{self.path}.htm'
             args['method'] = self.method
             args['headers'] = self.headers
-            args['params'] = function(obj)
+            args['params'] = function(obj, self.path)
             response = obj.session.request(**args)
             return response
         return wrapper
@@ -33,4 +33,11 @@ class PostRequest(Request):
 
     def __init__(self, path, *args, **kwargs):
         super().__init__('POST', path, *args, **kwargs)
+
+def json(function):
+    def wrapper(*args, **kwargs):
+        response = function(*args, **kwargs)
+        json = response.json()
+        return json
+    return wrapper
 

@@ -2,7 +2,7 @@ from bs4 import BeautifulSoup as Soup
 from scrapy.http import HtmlResponse
 from scrapy.selector import Selector
 from util import lazy_property, make_url, make_regex_state
-from decorator import PostRequest, GetRequest
+from decorator import PostRequest, GetRequest, json
 import bpn_header
 import requests
 
@@ -19,7 +19,7 @@ class Bpn(object):
         response = self.__login()
 
     @PostRequest(path='doLogin', headers=bpn_header.login)
-    def __login(self):
+    def __login(self, path):
         page = self.page('login')
         selector = '#LoginForm [name="_STATE_"]'
         state = page.css(selector).attrib['value']
@@ -35,22 +35,19 @@ class Bpn(object):
         return params
 
     @GetRequest(path='logout', headers=bpn_header.logout)
-    def logout(self):
+    def logout(self, path):
         return dict()
 
     @lazy_property
-    def accounts(self):
+    @json
+    @PostRequest(path='getCuentas')
+    def accounts(self, path):
         page = self.page('saldos')
-        section = 'getCuentas'
-        regex = make_regex_state(section)
-        state = page.xpath(XPATH_SCRIPT, text=section).re_first(regex)
-        url = make_url(section)
-        headers = bpn_header.transferences
-        response = self.session.post(url, headers=headers, params={
-            '_STATE_': state,
-        })
-        json = response.json()
-        return json
+        regex = make_regex_state(path)
+        state = page.xpath(XPATH_SCRIPT, text=path).re_first(regex)
+        params = {}
+        params['_STATE_'] = state
+        return params
 
     @lazy_property
     def accounts_for_pc(self):
@@ -319,13 +316,13 @@ class Bpn(object):
         return page
 
     @PostRequest(path='doLoginFirstStep', headers=bpn_header.login)
-    def login_page(self):
+    def login_page(self, path):
         params = {}
         params['username'] = self.username
         return params
 
     @PostRequest(path='home', headers=bpn_header.home)
-    def home_page(self):
+    def home_page(self, path):
         page = self.page('login')
         selector = '#RedirectHomeForm [name="_STATE_"]'
         state = page.css(selector).attrib['value']
@@ -335,9 +332,9 @@ class Bpn(object):
 
     def subpage_from_home_page(self, section):
         @PostRequest(path=section)
-        def function(self):
+        def function(self, path):
             page = self.page('home')
-            selector = f'#_menu_{section}'
+            selector = f'#_menu_{path}'
             state = page.css(selector).xpath('@realhref').re_first(r'=(.*)')
             params = {}
             params['_STATE_'] = state
