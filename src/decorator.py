@@ -1,12 +1,21 @@
 from bpn_header import transferences as HEADERS
-from util import make_regex_state
 from functools import wraps
-
 
 SCHEME = 'https'
 DOMAIN = 'hb.redlink.com.ar'
 URL_DIRECTORY = 'bpn'
 URL_BASE = f'{SCHEME}://{DOMAIN}/{URL_DIRECTORY}'
+
+def lazy_property(fn):
+    '''Decorator that makes a property lazy-evaluated.
+    '''
+    attr_name = '_lazy_' + fn.__name__
+    @property
+    def _lazy_property(self):
+        if not hasattr(self, attr_name):
+            setattr(self, attr_name, fn(self))
+        return getattr(self, attr_name)
+    return _lazy_property
 
 class Request(object):
 
@@ -22,7 +31,8 @@ class Request(object):
             args['url'] = f'{URL_BASE}/{self.path}.htm'
             args['method'] = self.method
             args['headers'] = self.headers
-            args['params'] = function(obj, self.path)
+            params = function(obj, self.path)
+            args['params'] = params
             response = obj.session.request(**args)
             return response
         return wrapper
