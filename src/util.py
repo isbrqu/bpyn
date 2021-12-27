@@ -33,3 +33,4 @@ def lazy_property(fn):
             setattr(self, attr_name, fn(self))
         return getattr(self, attr_name)
     return _lazy_property
+

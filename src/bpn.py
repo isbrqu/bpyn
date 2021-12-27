@@ -2,7 +2,13 @@ from bs4 import BeautifulSoup as Soup
 from scrapy.http import HtmlResponse
 from scrapy.selector import Selector
 from util import lazy_property, make_url, make_regex_state
-from decorator import PostRequest, GetRequest, json, state_in_script
+from decorator import (
+    PostRequest,
+    GetRequest,
+    json,
+    state_in_script,
+    state,
+)
 import bpn_header
 import requests
 
@@ -19,12 +25,9 @@ class Bpn(object):
         response = self.__login()
 
     @PostRequest(path='doLogin', headers=bpn_header.login)
-    def __login(self, path):
-        page = self.page('login')
-        selector = '#LoginForm [name="_STATE_"]'
-        state = page.css(selector).attrib['value']
+    @state(name='login', css='#LoginForm [name="_STATE_"]::attr(value)')
+    def __login(self):
         params = {}
-        params['_STATE_'] = state
         params['username'] = self.username
         params['password'] = self.password
         params['jsonRequest'] = True
@@ -41,29 +44,29 @@ class Bpn(object):
     @lazy_property
     @json
     @PostRequest(path='getCuentas')
-    @state_in_script(namepage='saldos')
-    def accounts(self, path):
+    @state(name='saldos')
+    def accounts(self):
         return dict()
 
     @lazy_property
     @json
     @PostRequest(path='getCuentasForPC')
-    @state_in_script(namepage='posicionConsolidada')
-    def accounts_for_pc(self, path):
+    @state(name='posicionConsolidada')
+    def accounts_for_pc(self):
         return dict()
 
     @lazy_property
     @json
     @PostRequest(path='obtenerLinkPagosEnte')
-    @state_in_script(namepage='pagosRealizados')
-    def entities(self, path):
+    @state(name='pagosRealizados')
+    def entities(self):
         return dict()
 
     @lazy_property
     @json
     @PostRequest(path='getCuentasDestinoTransferenciasSinClasificar')
-    @state_in_script(namepage='administrarCuentasTransferencia')
-    def unknown_transfer_accounts(self, path):
+    @state(name='administrarCuentasTransferencia')
+    def unknown_transfer_accounts(self):
         return dict()
 
     @lazy_property
@@ -297,22 +300,14 @@ class Bpn(object):
         return params
 
     @PostRequest(path='home', headers=bpn_header.home)
-    def home_page(self, path):
-        page = self.page('login')
-        selector = '#RedirectHomeForm [name="_STATE_"]'
-        state = page.css(selector).attrib['value']
-        params = {}
-        params['_STATE_'] = state
-        return params
+    @state(name='login', css='#RedirectHomeForm [name="_STATE_"]::attr(value)')
+    def home_page(self):
+        return dict()
 
-    def subpage_from_home_page(self, section):
-        @PostRequest(path=section)
-        def function(self, path):
-            page = self.page('home')
-            selector = f'#_menu_{path}'
-            state = page.css(selector).xpath('@realhref').re_first(r'=(.*)')
-            params = {}
-            params['_STATE_'] = state
-            return params
+    def subpage_from_home_page(self, path):
+        @PostRequest(path=path)
+        @state(name='home', css=f'#_menu_{path}::attr(realhref)')
+        def function(self):
+            return dict()
         return function(self)
 

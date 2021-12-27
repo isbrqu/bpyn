@@ -1,5 +1,6 @@
 from bpn_header import transferences as HEADERS
 from util import make_regex_state
+from functools import wraps
 
 
 SCHEME = 'https'
@@ -7,9 +8,6 @@ DOMAIN = 'hb.redlink.com.ar'
 URL_DIRECTORY = 'bpn'
 URL_BASE = f'{SCHEME}://{DOMAIN}/{URL_DIRECTORY}'
 
-XPATH_SCRIPT = '//script[contains(. , $text)]/text()'
-
-# https://stackoverflow.com/a/60309236
 class Request(object):
 
     def __init__(self, method, path, headers=None):
@@ -18,6 +16,7 @@ class Request(object):
         self.headers = headers or HEADERS
 
     def __call__(self, function):
+        @wraps(function)
         def wrapper(obj):
             args = {}
             args['url'] = f'{URL_BASE}/{self.path}.htm'
@@ -39,20 +38,28 @@ class PostRequest(Request):
         super().__init__('POST', path, *args, **kwargs)
 
 def json(function):
+    @wraps(function)
     def wrapper(*args, **kwargs):
         response = function(*args, **kwargs)
         json = response.json()
         return json
     return wrapper
 
-def state_in_script(namepage):
+SCRIPT = '//script[contains(. , $text)]/text()'
+
+def state(name, css=None):
     def closure(function):
-        def wrapper(obj, path):
-            page = obj.page(namepage)
-            regex = make_regex_state(path)
-            state = page.xpath(XPATH_SCRIPT, text=path).re_first(regex)
-            params = function(obj, path)
+        @wraps(function)
+        def wrapper(self, path):
+            page = self.page(name)
+            regex1 = fr'(?:{path}.+_STATE_=)'
+            regex2 = r'([0-9A-F]+-[0-9A-F]+-[0-9A-F]+)'
+            regexo = '?' if css else ''
+            tag = page.css(css) if css else page.xpath(SCRIPT, text=path)
+            state = tag.re_first(fr'{regex1}{regexo}{regex2}')
+            params = function(self)
             params['_STATE_'] = state
             return params
         return wrapper
     return closure
+
