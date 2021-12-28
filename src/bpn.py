@@ -9,6 +9,10 @@ from requests import Session
 from scrapy.http import HtmlResponse
 import bpn_header
 
+def regex(path, optional=False):
+    op = '?' if optional else ''
+    return fr'(?:{path}.+_STATE_=){op}([0-9A-F]+-[0-9A-F]+-[0-9A-F]+)'
+
 class Bpn(object):
 
     def __init__(self, username, password):
@@ -20,9 +24,12 @@ class Bpn(object):
         response = self.__login()
 
     @PostRequest(path='doLogin', headers=bpn_header.login)
-    @state(name='login', css='#LoginForm [name="_STATE_"]::attr(value)')
-    def __login(self):
-        params = {}
+    def __login(self, path):
+        page = self.page('login')
+        css = f'#LoginForm [name="_STATE_"]::attr(value)'
+        state = page.css(css).get()
+        params = dict()
+        params['_STATE_'] = state
         params['username'] = self.username
         params['password'] = self.password
         params['jsonRequest'] = True
@@ -235,14 +242,24 @@ class Bpn(object):
         return params
 
     @PostRequest(path='home', headers=bpn_header.home)
-    @state(name='login', css='#RedirectHomeForm [name="_STATE_"]::attr(value)')
-    def home_page(self):
-        return dict()
+    def home_page(self, path):
+        page = self.page('login')
+        css = '#RedirectHomeForm [name="_STATE_"]::attr(value)'
+        state = page.css(css).get()
+        params = dict()
+        params['_STATE_'] = state
+        return params
 
     def subpage_from_home_page(self, path):
         @PostRequest(path=path)
-        @state(name='home', css=f'#_menu_{path}::attr(realhref)')
-        def function(self):
-            return dict()
-        return function(self)
+        def function(self, path):
+            page = self.page('home')
+            css = f'#_menu_{path}::attr(realhref)'
+            re = regex(path)
+            state = page.css(css).re_first(re)
+            params = dict()
+            params['_STATE_'] = state
+            return params
+        response = function(self)
+        return response
 
