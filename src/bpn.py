@@ -159,25 +159,16 @@ class Bpn(object):
         params['page'] = 2
         return params
 
-    # métodos dependientes de los anteriores
-
-    @lazy_property
-    @json
-    @PostRequest(path='getSaldosTotales')
-    @state(name='saldos', css='#grilla::attr(source)')
-    def total_balance(self):
-        # required to calculate the total balance
-        [_ for _ in self.balances]
-        return dict()
-
     @lazy_property
     @json
     @PostRequest(path='getSaldoPosCons')
     @state(name='posicionConsolidada')
     def balance_in_consolidated_position(self):
-        return dict()
-
-    # métodos dependientes de los anteriores y con un generador como retorno
+        for account in self.accounts_for_pc['response']['data']:
+            params = dict()
+            params['numero'] = account['numero']
+            params['tipoTandem'] = account['tipoTandem']
+            yield params
 
     @lazy_property
     @json
@@ -188,7 +179,16 @@ class Bpn(object):
             params = dict()
             params['numero'] = account['numero']
             params['tipoTandem'] = account['tipoTandem']
-            return params
+            yield params
+
+    @lazy_property
+    @json
+    @PostRequest(path='getSaldosTotales')
+    @state(name='saldos')
+    def total_balance(self):
+        # required to calculate the total balance
+        [_ for _ in self.balances]
+        return dict()
 
     @lazy_property
     @json
@@ -197,20 +197,22 @@ class Bpn(object):
     def payments_made(self):
         json = self.entities
         for entity in json['response']['data'][0]['adheridos']:
-            params = dict()
-            params['codAbre'] = entity['codigoAbre']
-            params['ente'] = entity['codigoEnte']
-            params['linkPagosEnte'] = ''
-            params['pagSgte'] = ''
-            params['pagAnt'] = ''
-            params['pagAct'] = 0
-            params['fechaDesde'] = '28/09/1991'
-            params['fechaHasta'] = '28/09/2021'
-            params['importeDesde'] = ''
-            params['importeHasta'] = ''
-            params['vencDesde'] = '28/09/2021'
-            params['vencHasta'] = ''
-            return params
+            for i in range(0, 30):
+                params = dict()
+                params['codAbre'] = entity['codigoAbre']
+                params['ente'] = entity['codigoEnte']
+                params['linkPagosEnte'] = ''
+                params['pagSgte'] = ''
+                params['pagAnt'] = ''
+                params['pagAct'] = i
+                params['fechaDesde'] = '28/09/1991'
+                params['fechaHasta'] = '28/09/2021'
+                params['importeDesde'] = ''
+                params['importeHasta'] = ''
+                params['vencDesde'] = '28/09/2021'
+                params['vencHasta'] = ''
+                yield params
+            break
 
     def page(self, name):
         if name in self.pages:

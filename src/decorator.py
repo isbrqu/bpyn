@@ -1,5 +1,6 @@
 from bpn_header import transferences as HEADERS
 from functools import wraps
+from requests.models import Response
 
 SCHEME = 'https'
 DOMAIN = 'hb.redlink.com.ar'
@@ -32,10 +33,18 @@ class Request(object):
             args['method'] = self.method
             args['headers'] = self.headers
             params = function(obj, self.path)
-            args['params'] = params
-            response = obj.session.request(**args)
-            return response
+            if isinstance(params, dict):
+                args['params'] = params
+                response = obj.session.request(**args)
+                return response
+            return self.generator(params, obj, args)
         return wrapper
+
+    def generator(self, params, obj, args):
+        for param in params:
+            args['params'] = param
+            response = obj.session.request(**args)
+            yield response
 
 class GetRequest(Request):
 
@@ -49,10 +58,13 @@ class PostRequest(Request):
 
 def json(function):
     @wraps(function)
-    def wrapper(*args, **kwargs):
-        response = function(*args, **kwargs)
-        json = response.json()
-        return json
+    def wrapper(self):
+        response = function(self)
+        if isinstance(response, Response):
+            json = response.json()
+            return json
+        generator = (subresponse.json() for subresponse in response)
+        return generator
     return wrapper
 
 SCRIPT = '//script[contains(. , $text)]/text()'
@@ -68,8 +80,14 @@ def state(name, css=None):
             tag = page.css(css) if css else page.xpath(SCRIPT, text=path)
             state = tag.re_first(fr'{regex1}{regexo}{regex2}')
             params = function(self)
-            params['_STATE_'] = state
-            return params
+            if isinstance(params, dict):
+                return add_state(params, state)
+            generator = (add_state(param, state) for param in params)
+            return generator
         return wrapper
     return closure
+
+def add_state(params, state):
+    params['_STATE_'] = state
+    return params
 
