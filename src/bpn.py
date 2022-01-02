@@ -9,6 +9,8 @@ from requests import Session
 from scrapy.http import HtmlResponse
 import bpn_header
 
+SCRIPT = '//script[contains(. , $text)]/text()'
+
 def regex(path, optional=False):
     op = '?' if optional else ''
     return fr'(?:{path}.+_STATE_=){op}([0-9A-F]+-[0-9A-F]+-[0-9A-F]+)'
@@ -46,15 +48,21 @@ class Bpn(object):
     @lazy_property
     @json
     @PostRequest(path='getCuentas')
-    @state(name='saldos')
-    def accounts(self):
-        return dict()
+    def accounts(self, path):
+        page = self.page('saldos')
+        state = self.state_script(page, path)
+        params = dict()
+        params['_STATE_'] = state
+        return params
 
     @lazy_property
     @json
     @PostRequest(path='getCuentasForPC')
-    @state(name='posicionConsolidada')
     def accounts_for_pc(self):
+        page = self.page('posicionConsolidada')
+        state = self.state_script(page, path)
+        params = dict()
+        params['_STATE_'] = state
         return dict()
 
     @lazy_property
@@ -113,13 +121,14 @@ class Bpn(object):
     @PostRequest(path='getCuentasDestinoTransferenciasTerceros')
     @state(name='administrarCuentasTransferencia')
     def third_party_transfer_accounts(self):
-        params = dict()
-        params['pageNumber'] = 1
-        params['linesPerPage'] = 10
-        params['pageNumber'] = 1
-        params['orderingField'] = 'banco'
-        params['sortOrder'] = 'desc'
-        return params
+        for i in range(1, 4):
+            params = dict()
+            params['pageNumber'] = 1
+            params['linesPerPage'] = 10
+            params['pageNumber'] = i
+            params['orderingField'] = 'banco'
+            params['sortOrder'] = 'desc'
+            yield params
 
     @lazy_property
     @json
@@ -262,4 +271,9 @@ class Bpn(object):
             return params
         response = function(self)
         return response
+
+    def state_script(self, page, path):
+        re = regex(path)
+        state = page.xpath(SCRIPT, text=path).re_first(re)
+        return state
 
